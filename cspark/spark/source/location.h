@@ -5,7 +5,11 @@
 #ifndef SPARK_SOURCE_LOCATION_H
 #define SPARK_SOURCE_LOCATION_H 1
 
+#include <spark/config.h>
+
+#if SPARK_HAVE_ALGORITHM
 #include <algorithm>
+#endif
 
 namespace spark {
 namespace source {
@@ -18,7 +22,7 @@ struct Location {
   int16_t startCol;
   int32_t endLine;
   int16_t endCol;
-  
+
   Location()
     : source(NULL)
     , startLine(0)
@@ -50,9 +54,13 @@ struct Location {
     , endCol(src.endCol)
   {
   }
-  
-  static Location operator|(const Location& left, const Location& right) {
-    if (left.source != right.source) {
+
+  inline friend Location operator|(const Location& left, const Location& right) {
+    if (left.source == NULL) {
+      return right;
+    } else if (right.source == NULL) {
+      return left;
+    } else if (left.source != right.source) {
       return left;
     } else {
       Location result;
@@ -67,21 +75,26 @@ struct Location {
         result.startLine = left.startLine;
         result.startCol = std::min(left.startCol, right.startCol);
       }
-      if (left.endLine < right.endLine) {
+      if (left.endLine > right.endLine) {
         result.endLine = left.endLine;
         result.endCol = left.endCol;
-      } else if (left.endLine > right.endLine) {
+      } else if (left.endLine < right.endLine) {
         result.endLine = right.endLine;
         result.endCol = right.endCol;
       } else {
         result.endLine = left.endLine;
-        result.endCol = std::min(left.endCol, right.endCol);
+        result.endCol = std::max(left.endCol, right.endCol);
       }
       return result;
     }
   }
+
+  Location& operator|=(const Location& right) {
+    *this = *this | right;
+    return *this;
+  }
 };
-  
+
 }}
 
 #endif

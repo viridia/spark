@@ -1,0 +1,6 @@
+exceptions.IOError
+filestream.FileStream
+iostream.IOStream
+streamtextwriter.StreamTextWriter
+textreader.TextReader
+textwriter.TextWriter

@@ -1,0 +1,35 @@
+/* ================================================================== *
+ * Configuration Variables
+ * ================================================================== */
+
+#ifndef SPARK_CONFIG_H
+#define SPARK_CONFIG_H
+
+// C headers
+#cmakedefine SPARK_HAVE_DIRENT_H 1
+#cmakedefine SPARK_HAVE_MATH_H 1
+#cmakedefine SPARK_HAVE_STDDEF_H 1
+#cmakedefine SPARK_HAVE_STDINT_H 1
+#cmakedefine SPARK_HAVE_STDIO_H 1
+#cmakedefine SPARK_HAVE_UNISTD_H 1
+#cmakedefine SPARK_HAVE_SYS_STAT_H 1
+
+// C++ headers
+#cmakedefine SPARK_HAVE_ALGORITHM 1
+#cmakedefine SPARK_HAVE_CASSERT 1
+#cmakedefine SPARK_HAVE_CSIGNAL 1
+#cmakedefine SPARK_HAVE_CSTRING 1
+#cmakedefine SPARK_HAVE_CWCTYPE 1
+#cmakedefine SPARK_HAVE_FSTREAM 1
+#cmakedefine SPARK_HAVE_FUNCTIONAL 1
+#cmakedefine SPARK_HAVE_IOSTREAM 1
+#cmakedefine SPARK_HAVE_ISTREAM 1
+#cmakedefine SPARK_HAVE_MEMORY 1
+#cmakedefine SPARK_HAVE_NEW 1
+#cmakedefine SPARK_HAVE_OSTREAM 1
+#cmakedefine SPARK_HAVE_SSTREAM 1
+#cmakedefine SPARK_HAVE_STRING 1
+#cmakedefine SPARK_HAVE_UNORDERED_SET 1
+#cmakedefine SPARK_HAVE_UNORDERED_MAP 1
+
+#endif

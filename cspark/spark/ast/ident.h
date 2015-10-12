@@ -9,30 +9,31 @@
 #include <spark/ast/node.h>
 #endif
 
-#ifndef SPARK_COMMON_STRINGREF_H
-#include <spark/common/stringref.h>
+#ifndef SPARK_COLLECTIONS_STRINGREF_H
+#include <spark/collections/stringref.h>
 #endif
 
 namespace spark {
-namespace type {
-class Type;
-}
 namespace ast {
-using spark::common::StringRef;
-  
+using spark::collections::StringRef;
+
 /** Node type representing an identifier. */
 class Ident : public Node {
 public:
-  
+
   /** Construct an Ident node. */
-  Ident(Location& location, StringRef name)
+  Ident(const Location& location, StringRef name)
     : Node(KIND_IDENT, location)
     , _name(name)
   {}
 
   /** The text of this identifier. */
   const StringRef name() const { return _name; }
-  
+
+  static inline bool classof(const Ident*) { return true; }
+  static inline bool classof(const Node* node) {
+      return node->kind() == Node::KIND_IDENT;
+  }
 private:
   const StringRef _name;
 };
@@ -40,9 +41,9 @@ private:
 /** Node type representing a member reference. */
 class Member : public Node {
 public:
-  
+
   /** Construct a Member node. */
-  Member(Location& location, StringRef name, Node* base)
+  Member(const Location& location, StringRef name, Node* base)
     : Node(KIND_MEMBER, location)
     , _name(name)
     , _base(base)
@@ -52,17 +53,21 @@ public:
   const StringRef name() const { return _name; }
 
   /** The container of the member. */
-  const Node const* base() const { return _base; }
-  
+  const Node* base() const { return _base; }
+
+  static inline bool classof(const Member*) { return true; }
+  static inline bool classof(const Node* node) {
+      return node->kind() == Node::KIND_MEMBER;
+  }
 private:
   const StringRef _name;
-  const Node const* _base;
+  const Node* _base;
 };
 
 /** Node type representing a keyword argument. */
 class KeywordArg : public Node {
 public:
-  
+
   /** Construct a Member node. */
   KeywordArg(Location& location, StringRef name, Node* arg)
     : Node(KIND_KEYWORD_ARG, location)
@@ -73,28 +78,53 @@ public:
   const StringRef name() const { return _name; }
 
   /** The container of the member. */
-  const Node const* arg() const { return _arg; }
-  
+  const Node* arg() const { return _arg; }
+
+  static inline bool classof(const KeywordArg*) { return true; }
+  static inline bool classof(const Node* node) {
+      return node->kind() == Node::KIND_KEYWORD_ARG;
+  }
 private:
   const StringRef _name;
-  const Node const* _arg;
+  const Node* _arg;
 };
 
 /** Node type representing a built-in type. */
 class BuiltInType : public Node {
 public:
-  
+  enum Type {
+    VOID,
+    BOOL,
+    CHAR,
+    I8,
+    I16,
+    I32,
+    I64,
+    INT,
+    U8,
+    U16,
+    U32,
+    U64,
+    UINT,
+    F32,
+    F64,
+  };
+
   /** Construct an Ident node. */
-  BuiltInType(Location& location, const type::Type* type)
+  BuiltInType(const Location& location, Type type)
     : Node(KIND_BUILTIN_TYPE, location)
     , _type(type)
   {}
 
-  /** The text of this identifier. */
-  const type::Type* type() const { return _type; }
-  
+  /** The actual type. */
+  Type type() const { return _type; }
+
+  static inline bool classof(const BuiltInType*) { return true; }
+  static inline bool classof(const Node* node) {
+      return node->kind() == Node::KIND_BUILTIN_TYPE;
+  }
 private:
-  const type::Type* _type;
+  Type _type;
 };
 
 /** Node type representing a built-in attribute. */
@@ -105,18 +135,24 @@ public:
     TRACEMETHOD,
     UNSAFE
   };
-  
+
   /** Construct an Ident node. */
   BuiltInAttribute(Location& location, Attribute attribute)
-    : Node(KIND_BUILTIN_ATTR, location)
+    : Node(KIND_BUILTIN_ATTRIBUTE, location)
     , _attribute(attribute)
   {}
 
   /** Type of attribute. */
-  const Attribute attribute() const { return _attribute; }
-  
+  Attribute attribute() const { return _attribute; }
+
+  static inline bool classof(const BuiltInAttribute*) { return true; }
+  static inline bool classof(const Node* node) {
+      return node->kind() == Node::KIND_BUILTIN_ATTRIBUTE;
+  }
 private:
   const Attribute _attribute;
 };
+
+}}
 
 #endif
