@@ -57,10 +57,10 @@ public:
 
   /** Return the size of the string in bytes. */
   size_t size() const { return _size; }
-  
+
   /** True if the length is zero. */
   bool empty() const { return _size == 0; }
-  
+
   /** Equality comparison. */
   friend bool operator==(const StringRef& lhs, const StringRef& rhs) {
     if (lhs._size == rhs._size) {
@@ -112,6 +112,9 @@ public:
     }
     return StringRef(&_data[start], end - start);
   }
+
+  /** Convert this StringRef to an STL string. */
+  std::string str() const { return std::string(_data, _size); }
 
 private:
   const char* _data;

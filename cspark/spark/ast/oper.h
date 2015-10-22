@@ -27,10 +27,6 @@ public:
   /** The argumment to the unary operator. */
   const Node* arg() const { return _arg; }
 
-  static inline bool classof(const UnaryOp*) { return true; }
-  static inline bool classof(const Node* node) {
-    return node->kind() >= Node::KIND_UNARY_START && node->kind() <= Node::KIND_UNARY_END;
-  }
 private:
   const Node* _arg;
 };
@@ -52,10 +48,6 @@ public:
   NodeList operands() const { return _operands; }
   void setOperands(const NodeList& operands) { _operands = operands; }
 
-  static inline bool classof(const Oper*) { return true; }
-  static inline bool classof(const Node* node) {
-    return node->kind() >= Node::KIND_OPER_START && node->kind() <= Node::KIND_OPER_END;
-  }
 private:
   Node* _op;
   NodeList _operands;
@@ -76,10 +68,6 @@ public:
   /** List of arguments to the operator. */
   NodeList outcomes() const { return _outcomes; }
 
-  static inline bool classof(const ControlStmt*) { return true; }
-  static inline bool classof(const Node* node) {
-    return node->kind() >= Node::KIND_CTRL_START && node->kind() <= Node::KIND_CTRL_END;
-  }
 private:
   const Node* _test;
   NodeList _outcomes;

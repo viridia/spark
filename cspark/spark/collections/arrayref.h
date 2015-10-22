@@ -5,16 +5,16 @@
 #ifndef SPARK_COLLECTIONS_ARRAYREF_H
 #define SPARK_COLLECTIONS_ARRAYREF_H
 
-// #ifndef MINT_COLLECTIONS_SMALLVECTOR_H
-// #include "mint/collections/SmallVector.h"
-// #endif
-
 #if SPARK_HAVE_STDDEF_H
-#include <stddef.h>
+  #include <stddef.h>
 #endif
 
 #if SPARK_HAVE_ITERATOR
-#include <iterator>
+  #include <iterator>
+#endif
+
+#if SPARK_HAVE_VECTOR
+  #include <vector>
 #endif
 
 namespace spark {
@@ -30,24 +30,20 @@ public:
   typedef const T * const_iterator;
   typedef size_t size_type;
 
-  /// Construct an empty ArrayRef.
+  /** Construct an empty ArrayRef. */
   ArrayRef() : _data(NULL), _size(0) {}
 
-  /// Copy constructor.
-  ArrayRef(const ArrayRef & src) : _data(src._data), _size(src._size) {}
+  /** Copy constructor. */
+  ArrayRef(const ArrayRef& src) : _data(src._data), _size(src._size) {}
 
-  /// Construct an ArrayRef from am iterator pair.
-  ArrayRef(const T * first, const T * last) : _data(first), _size(size_type(last - first)) {}
+  /** Construct an ArrayRef from am iterator pair. */
+  ArrayRef(const T* first, const T* last) : _data(first), _size(size_type(last - first)) {}
 
-  /// Construct an ArrayRef from a pointer and length.
-  ArrayRef(const T * data, size_t size) : _data(data), _size(size) {}
+  /** Construct an ArrayRef from a pointer and length. */
+  ArrayRef(const T* data, size_t size) : _data(data), _size(size) {}
 
-  /// Construct an ArrayRef from a SmallVectorImpl.
-//   ArrayRef(const SmallVectorImpl<T> & sv) : _data(sv.data()), _size(sv.size()) {}
-
-  /// Construct an ArrayRef from a SmallVector.
-//   template <size_t Size>
-//   ArrayRef(const SmallVector<T, Size> & sv) : _data(sv.data()), _size(sv.size()) {}
+  /** Construct an ArrayRef from a vector. */
+  ArrayRef(const std::vector<T>& v) : _data(v.data()), _size(v.size()) {}
 
   /// Construct an ArrayRef from a C array.
   template <size_t Size> ArrayRef(const T (&array)[Size]) : _data(array), _size(Size) {}

@@ -1,5 +1,3 @@
-NODE_KIND(NODE = 0)
-
 /* Sentinel values */
 
 NODE_KIND(ERROR)
@@ -7,7 +5,7 @@ NODE_KIND(ABSENT)
 
 /* Built-in Values */
 
-NODE_KIND(NULL)
+NODE_KIND(NULL_LITERAL)
 NODE_KIND(SELF)
 NODE_KIND(SUPER)
 

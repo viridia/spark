@@ -59,13 +59,13 @@ public:
    */
   struct Entry {
     ast::Node* operand;
-    ast::Node::Kind oper;
+    ast::Kind oper;
     int16_t precedence;
     bool rightAssoc;
 
     Entry()
       : operand(NULL)
-      , oper(ast::Node::KIND_ABSENT)
+      , oper(ast::Kind::ABSENT)
       , precedence(0)
       , rightAssoc(false)
     {}
@@ -86,7 +86,7 @@ public:
   }
 
   void pushOperand(ast::Node* operand);
-  bool pushOperator(ast::Node::Kind oper, int16_t prec, bool rightAssoc = false);
+  bool pushOperator(ast::Kind oper, int16_t prec, bool rightAssoc = false);
   bool reduce(int16_t precedence, bool rightAssoc = false);
   bool reduceAll();
 
@@ -130,13 +130,13 @@ private:
 
   bool requirements(ast::NodeListBuilder& requires);
   ast::Node* requirement();
-  ast::Node* requireBinaryOp(ast::Node::Kind kind, ast::Node* left);
-  ast::Node* requireCall(ast::Node::Kind kind, ast::Node* fn);
+  ast::Node* requireBinaryOp(ast::Kind kind, ast::Node* left);
+  ast::Node* requireCall(ast::Kind kind, ast::Node* fn);
   bool paramList(ast::NodeListBuilder& params);
 
   ast::Defn* varOrLetDefn();
-  ast::ValueDefn* varDeclList(ast::Node::Kind kind);
-  ast::ValueDefn* varDecl(ast::Node::Kind kind);
+  ast::ValueDefn* varDeclList(ast::Kind kind);
+  ast::ValueDefn* varDecl(ast::Kind kind);
 
   ast::Node* typeUnion();
   ast::Node* typeTerm(bool allowPartial = false);
@@ -203,7 +203,7 @@ private:
 
   /** Create a new node with the given kind and the current token location. Also consume the
       current token. */
-  ast::Node* node(ast::Node::Kind kind);
+  ast::Node* node(ast::Kind kind);
 
   // Delete copy constructor.
   Parser(const Parser&);

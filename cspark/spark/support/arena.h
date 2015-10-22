@@ -5,6 +5,10 @@
 #ifndef SPARK_SUPPORT_ARENA_H
 #define SPARK_SUPPORT_ARENA_H 1
 
+#ifndef SPARK_COLLECTIONS_STRINGREF_H
+  #include <spark/collections/stringref.h>
+#endif
+
 #if SPARK_HAVE_NEW
   #include <new>
 #endif
@@ -18,20 +22,20 @@ private:
   struct Block {
     Block* _next;
   };
-  
+
   static const std::size_t BLOCK_HEADER_SIZE = (sizeof(Block) + 7) & ~7;
 public:
   typedef uint8_t value_type;
   /** Default block size. */
   static const std::size_t DEFAULT_BLOCK_SIZE = 0x10000 - BLOCK_HEADER_SIZE; // 64K
-  
+
   Arena(std::size_t blockSize = DEFAULT_BLOCK_SIZE)
     : _head(NULL)
     , _pos(NULL)
     , _end(NULL)
     , _blockSize(blockSize)
   {}
-  
+
   ~Arena() {
     clear();
   }
@@ -57,7 +61,7 @@ public:
 
   /** Deallocate does nothing. */
   void deallocate(value_type* p, std::size_t n) {}
-  
+
   /** Free all memory. */
   void clear() {
     while (_head) {
@@ -66,28 +70,39 @@ public:
       delete reinterpret_cast<uint8_t*>(blk);
     }
   }
+
+  /** Make a long-lived copy of this StringRef. */
+  collections::StringRef copyOf(const collections::StringRef& str) {
+    value_type* data = allocate(str.size());
+    std::copy(str.begin(), str.end(), data);
+    return collections::StringRef((char*) data, str.size());
+  }
 private:
   Block* _head;
   value_type *_pos;
   value_type *_end;
   size_t _blockSize;
+
+  // Hide copy constructor
+  Arena(const Arena& a);
+  Arena& operator=(const Arena& a);
 };
 
 /** Allocator compatible with C++ std containers. */
 class ArenaRef {
 public:
   typedef uint8_t value_type;
-  
+
   ArenaRef(Arena& arena) : _arena(arena) {}
   ArenaRef(ArenaRef& ref) : _arena(ref._arena) {}
-  
+
   friend bool operator==(const ArenaRef& l, const ArenaRef& r) {
     return &l._arena == &r._arena;
   }
   friend bool operator!=(const ArenaRef& l, const ArenaRef& r) {
     return &l._arena != &r._arena;
   }
-  
+
   /** Allocate a block of at least size `size`. */
   value_type* allocate(std::size_t n) {
     return _arena.allocate(n);
@@ -98,7 +113,7 @@ public:
 
   /** Reference to the arena. */
   Arena& arena() const { return _arena; }
-  
+
 private:
   Arena& _arena;
 };

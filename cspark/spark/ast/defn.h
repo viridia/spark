@@ -1,5 +1,5 @@
 // ============================================================================
-// defn.h: AST nodes representing definitions.
+// ast/defn.h: AST nodes representing definitions.
 // ============================================================================
 
 #ifndef SPARK_AST_DEFN_H
@@ -35,6 +35,9 @@ public:
     , _final(false)
     , _abstract(false)
   {}
+
+  /** The name of this definition. */
+  StringRef name() const { return _name; }
 
   /** The list of members of this definition. */
   const NodeList& members() const { return _members; }
@@ -84,10 +87,6 @@ public:
   bool isAbstract() const { return _abstract; }
   void setAbstract(bool value) { _abstract = value; }
 
-  static inline bool classof(const Defn*) { return true; }
-  static inline bool classof(const Node* node) {
-    return node->kind() >= Node::KIND_DEFN && node->kind() < Node::KIND_DEFN_END;
-  }
 private:
   StringRef _name;
   NodeList _members;
@@ -148,7 +147,7 @@ private:
 class EnumValue : public ValueDefn {
 public:
   EnumValue(const Location& location, const StringRef& name)
-    : ValueDefn(KIND_ENUM_VALUE, location, name)
+    : ValueDefn(Kind::ENUM_VALUE, location, name)
   {}
 
   int32_t ordinal() const { return _ordinal; }
@@ -160,7 +159,7 @@ private:
 class Parameter : public ValueDefn {
 public:
   Parameter(const Location& location, const StringRef& name)
-    : ValueDefn(KIND_PARAMETER, location, name)
+    : ValueDefn(Kind::PARAMETER, location, name)
   {}
 
   /** Indicates a keyword-only parameter. */
@@ -198,7 +197,7 @@ private:
 class TypeParameter : public Defn {
 public:
   TypeParameter(const Location& location, const StringRef& name)
-    : Defn(KIND_TYPE_PARAMETER, location, name)
+    : Defn(Kind::TYPE_PARAMETER, location, name)
     , _type(NULL)
     , _init(NULL)
     , _variadic(false)
@@ -228,7 +227,7 @@ private:
 class Function : public Defn {
 public:
   Function(const Location& location, const StringRef& name)
-    : Defn(KIND_FUNCTION, location, name)
+    : Defn(Kind::FUNCTION, location, name)
     , _type(NULL)
     , _body(NULL)
     , _constructor(false)
@@ -277,7 +276,7 @@ private:
 class Property : public Defn {
 public:
   Property(const Location& location, const StringRef& name)
-    : Defn(KIND_PROPERTY, location, name)
+    : Defn(Kind::PROPERTY, location, name)
     , _type(NULL)
     , _getter(NULL)
     , _setter(NULL)

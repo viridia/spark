@@ -6,7 +6,11 @@
 #define SPARK_AST_MODULE_H 1
 
 #ifndef SPARK_AST_NODE_H
-#include "spark/ast/node.h"
+  #include "spark/ast/node.h"
+#endif
+
+#ifndef SPARK_COLLECTIONS_STRINGREF_H
+  #include "spark/collections/stringref.h"
 #endif
 
 namespace spark {
@@ -17,7 +21,7 @@ using spark::collections::StringRef;
 class Module : public Node {
 public:
   Module(const Location& location)
-    : Node(KIND_MODULE, location)
+    : Node(Kind::MODULE, location)
   {}
 
   /** List of members of this module. */
@@ -39,7 +43,7 @@ public:
 
   /** Construct an Ident node. */
   Import(const Location& location, const Node* path, StringRef alias)
-    : Node(KIND_IMPORT, location)
+    : Node(Kind::IMPORT, location)
     , _path(path)
     , _alias(alias)
   {}

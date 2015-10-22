@@ -56,12 +56,12 @@ struct Location {
   }
 
   inline friend Location operator|(const Location& left, const Location& right) {
-    if (left.source == NULL) {
-      return right;
-    } else if (right.source == NULL) {
-      return left;
-    } else if (left.source != right.source) {
-      return left;
+    if (left.source != right.source) {
+      if (left.source == NULL) {
+        return right;
+      } else {
+        return left;
+      }
     } else {
       Location result;
       result.source = left.source;

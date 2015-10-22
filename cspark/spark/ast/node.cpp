@@ -8,10 +8,24 @@ namespace spark {
 namespace ast {
 
 /** Singleton error node. */
-Node Node::ERROR(Node::KIND_ERROR, source::Location());
+Node Node::ERROR(Kind::ERROR, source::Location());
 
 /** Sentinel node to indicate lack of a node. */
-Node Node::ABSENT(Node::KIND_ABSENT, source::Location());
+Node Node::ABSENT(Kind::ABSENT, source::Location());
+
+#define NODE_KIND(x) #x,
+
+const char* KIND_NAMES[] = {
+  #include "spark/ast/nodetype.txt"
+};
+
+const char* Node::KindName(Kind kind) {
+  if (kind < Kind::LAST) {
+    return KIND_NAMES[(uint32_t)kind];
+  }
+
+  return "<Invalid AST Kind>";
+}
 
 }}
 

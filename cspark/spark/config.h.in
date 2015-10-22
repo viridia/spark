@@ -6,7 +6,10 @@
 #define SPARK_CONFIG_H
 
 // C headers
+#cmakedefine SPARK_HAVE_CXXABI_H 1
 #cmakedefine SPARK_HAVE_DIRENT_H 1
+#cmakedefine SPARK_HAVE_DLFCN_H 1
+#cmakedefine SPARK_HAVE_EXECINFO_H 1
 #cmakedefine SPARK_HAVE_MATH_H 1
 #cmakedefine SPARK_HAVE_STDDEF_H 1
 #cmakedefine SPARK_HAVE_STDINT_H 1
@@ -31,5 +34,10 @@
 #cmakedefine SPARK_HAVE_STRING 1
 #cmakedefine SPARK_HAVE_UNORDERED_SET 1
 #cmakedefine SPARK_HAVE_UNORDERED_MAP 1
+#cmakedefine SPARK_HAVE_VECTOR 1
+
+// Library functions
+#cmakedefine SPARK_HAVE_BACKTRACE 1
+#cmakedefine SPARK_HAVE_DLADDR 1
 
 #endif

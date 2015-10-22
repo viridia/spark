@@ -25,6 +25,18 @@
   #include <unistd.h>
 #endif
 
+#if SPARK_HAVE_EXECINFO_H
+  #include <execinfo.h>         // For backtrace().
+#endif
+
+#if SPARK_HAVE_CXXABI_H
+  #include <cxxabi.h>
+#endif
+
+#if SPARK_HAVE_DLFCN_H && __GNUG__
+  #include <dlfcn.h>
+#endif
+
 namespace spark {
 namespace error {
 using spark::source::Location;
@@ -105,12 +117,11 @@ void ConsoleReporter::report(Severity sev, Location loc, StringRef msg) {
     showErrorLine = true;
   }
 
-  std::cerr << severityNames[(int)sev] << ": ";
-  writeSpaces(_indentLevel * 2);
-  std::cerr << msg;
   if (sev != STATUS) {
-    std::cerr << "\n";
+    std::cerr << severityNames[(int)sev] << ": ";
   }
+  writeSpaces(_indentLevel * 2);
+  std::cerr << msg << "\n";
 
   if (colorChanged) {
     resetColor();
@@ -153,9 +164,82 @@ void ConsoleReporter::report(Severity sev, Location loc, StringRef msg) {
   std::cerr.flush();
   if (sev == FATAL) {
 #if SPARK_HAVE_CSIGNAL
+    printStackTrace(5);
     std::raise(SIGINT);
 #endif
   }
+}
+
+void ConsoleReporter::printStackTrace(int skipFrames) {
+#if SPARK_HAVE_BACKTRACE
+  static void* stackTrace[256];
+
+  // Use backtrace() to output a backtrace on Linux systems with glibc.
+  int depth = backtrace(stackTrace,
+      static_cast<int>(sizeof(stackTrace) / sizeof(stackTrace[0])));
+
+#if false && SPARK_HAVE_DLFCN_H && __GNUG__
+  for (int i = skipFrames; i < depth; ++i) {
+    Dl_info dlinfo;
+    dladdr(stackTrace[i], &dlinfo);
+    if (dlinfo.dli_sname != NULL) {
+      ::fputs("   ", stderr);
+#if SPARK_HAVE_CXXABI_H
+      int status;
+      char* d = abi::__cxa_demangle(dlinfo.dli_sname, NULL, NULL, &status);
+      if (d == NULL) ::fputs(dlinfo.dli_sname, stderr);
+      else           ::fputs(d, stderr);
+      ::free(d);
+#else
+      ::fputs(dlinfo.dli_sname, stderr);
+#endif
+
+      ::fprintf(stderr, " + %tu",(char*)stackTrace[i]-(char*)dlinfo.dli_saddr);
+    }
+    ::fputc('\n', stderr);
+  }
+#elif SPARK_HAVE_CXXABI_H
+  if (char** symbols = backtrace_symbols(stackTrace, depth)) {
+
+    // Name buffer used to contain demangling result.
+    size_t sz = 256;
+    char* buffer = (char *)malloc(sz);
+
+    for (int i = 0; i < depth; ++i) {
+      if (i >= skipFrames) {
+        char* symbol = symbols[i];
+        // TODO: This is a very cheesy way to extract the symbol name,
+        // need to come up with something that will work on various platforms.
+        // fprintf(outstream, "%s\n", symbol);
+        char* begin = strchr(symbol, '_');
+        char* demangled_name = NULL;
+        if (begin) {
+          char* end = ::strchr(begin, ' ');
+          if (end) {
+            *end = 0;
+            int status;
+            demangled_name = abi::__cxa_demangle(begin, buffer, &sz, &status);
+          }
+        }
+
+        if (demangled_name != NULL) {
+          ::fprintf(stderr, "    %s\n", demangled_name);
+
+          // Result may be a realloc of input buffer.
+          buffer = demangled_name;
+        } else if (begin != NULL){
+          ::fprintf(stderr, "    %s\n", begin);
+        }
+      }
+    }
+
+    ::free(symbols);
+    ::free(buffer);
+  }
+#else
+  backtrace_symbols_fd(stackTrace, depth, STDERR_FILENO);
+#endif
+#endif
 }
 
 }}

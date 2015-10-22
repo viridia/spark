@@ -10,13 +10,17 @@ set(SPARK_MINOR_REVISION 0)
 # Macros we'll need.
 include(CheckIncludeFile)
 include(CheckIncludeFileCXX)
+include(CheckFunctionExists)
 
 # Required compiler features.
 set(CMAKE_REQUIRED_FLAGS "-std=c++11")
 set(CMAKE_CXX_STANDARD 11)
 
 # C Headers.
+check_include_file(cxxabi.h SPARK_HAVE_CXXABI_H)
 check_include_file(dirent.h SPARK_HAVE_DIRENT_H)
+check_include_file(dlfcn.h SPARK_HAVE_DLFCN_H)
+check_include_file(execinfo.h SPARK_HAVE_EXECINFO_H)
 check_include_file(math.h SPARK_HAVE_MATH_H)
 check_include_file(stddef.h SPARK_HAVE_STDDEF_H)
 check_include_file(stdint.h SPARK_HAVE_STDINT_H)
@@ -41,6 +45,10 @@ check_include_file_cxx(sstream SPARK_HAVE_SSTREAM)
 check_include_file_cxx(string SPARK_HAVE_STRING)
 check_include_file_cxx(unordered_map SPARK_HAVE_UNORDERED_MAP)
 check_include_file_cxx(unordered_set SPARK_HAVE_UNORDERED_SET)
+check_include_file_cxx(vector SPARK_HAVE_VECTOR)
+
+check_function_exists(backtrace SPARK_HAVE_BACKTRACE)
+check_function_exists(dladdr SPARK_HAVE_DLADDR)
 
 # Include paths.
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/cspark)

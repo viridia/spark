@@ -14,7 +14,10 @@ file(GLOB compiler_sources
   spark/compiler/*.cpp
   spark/error/*.cpp
   spark/parse/*.cpp
+  spark/scope/*.cpp
   spark/sema/*.cpp
+  spark/sema/*/*.cpp
+  spark/semgraph/*.cpp
   spark/source/*.cpp
   spark/support/*.cpp
 )

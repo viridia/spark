@@ -15,66 +15,102 @@
   #include "spark/error/reporter.h"
 #endif
 
+#ifndef SPARK_SUPPORT_PATH_H
+  #include "spark/support/path.h"
+#endif
+
 #if SPARK_HAVE_ALGORITHM
   #include <algorithm>
+#endif
+
+#if SPARK_HAVE_UNORDERED_SET
+  #include <unordered_set>
+#endif
+
+#if SPARK_HAVE_VECTOR
+  #include <vector>
+#endif
+
+#if SPARK_HAVE_MEMORY
+  #include <memory>
 #endif
 
 namespace spark {
 namespace support {
 class Path;
 }
+namespace semgraph {
+class Module;
+}
+namespace sema {
+class Pass;
+}
 namespace compiler {
-using spark::collections::StringRef;
-using spark::error::Reporter;
+using collections::StringRef;
+using error::Reporter;
+using support::Path;
+
+class Context;
+class ContextImpl;
+class FileSystemImporter;
+class Phase;
+
+typedef std::vector<semgraph::Module*> ModuleList;
+typedef std::unordered_set<semgraph::Module*> ModuleSet;
 
 class Compiler {
 public:
-  Compiler(Reporter& reporter) : _reporter(reporter) {}
-  
+  Compiler(Reporter& reporter);
+
+  /** The error reporter for this compiler instance. */
   Reporter& reporter() const { return _reporter; }
 
-  /** List of source files or directories containing source files. */
-  const std::vector<StringRef>& sourcePaths() const { return _sourcePaths; }
-  void addSourcePath(const StringRef& srcPath) {
-    _sourcePaths.push_back(srcPath);
-  }
+  /** Root directory for the source tree. Input source patterns are resolved relative to this. */
+  const Path& sourceRoot() const { return _sourceRoot; }
+  void setSourceRoot(const StringRef& path);
 
-  /** List of modukle search paths. */
-  const std::vector<StringRef>& modulePaths() const { return _modulePaths; }
-  void addModulePath(const StringRef& modPath) {
-    _modulePaths.push_back(modPath);
-  }
+  /** List of source files or directories containing source files to compile.
+      If a sourceRoot has been specified, these paths will be resolved relative to that
+      path, otherwise they are resolved relative to the current directory. */
+  const std::vector<Path>& sources() const { return _sources; }
+  void addSource(const StringRef& path);
+
+  /** List of module search paths. */
+  const std::vector<Path>& modulePaths() const { return _modulePaths; }
+  void addModulePath(const StringRef& path);
 
   /** Output directory. */
-  const StringRef& outputDir() const { return _outputDir; }
-  void setOutputDir(const StringRef& outputDir) {
-    _outputDir = outputDir;
-  }
-  
+  const Path& outputDir() const { return _outputDir; }
+  void setOutputDir(const StringRef& path);
+
   void compile();
 
 private:
+  friend class spark::compiler::ContextImpl;
+
   Reporter& _reporter;
-  std::vector<StringRef> _sourcePaths;
-  std::vector<StringRef> _modulePaths;
-  std::vector<StringRef> _sourceModules;
-  StringRef _outputDir;
-  
-  void parseSource(const StringRef& sourcePath);
-  void processDir(support::Path& path /*, modules*/);
-  void processFile(support::Path& path /*, modules */);
+  Path _sourceRoot;
+  std::vector<Path> _sources;
+  std::vector<Path> _modulePaths;
+  Path _outputDir;
+  support::Path _currentDir;
+
+  std::auto_ptr<Context> _context;
+  FileSystemImporter* _fsImporter; // This is actually owned by the module path scope
+  std::vector<Phase*> _phases;
+  Phase* _importGraphBuilder;
+
+  void parseSource(const support::Path& sourcePath);
+  semgraph::Module* parseImportSource(const Path& path);
+  void processDir(const support::Path& path, ModuleList& modules);
+  void processFile(const support::Path& path, ModuleList& modules);
   bool shortPath(support::Path& path);
 
-//   def setOutputDir(self, out):
-//     assert not self.outputDir
-//     self.outputDir = Path(out)
-// 
+  void runPhases();
+
 //   def addModulePath(self, path):
 //     self.basePaths.append(path)
 //     self.fsPaths.addPath(path)
-
-//     self.parser = Parser(errorReporter)
-//     self.packageMgr = None
 
 //     super().__init__(errorReporter)
 //     self.packageMgr = PackageMgr()
@@ -96,7 +132,7 @@ private:
 //     self.passesRun = defaultdict(set)
 //     self.passGroups = []
 };
-  
+
 }}
 
 #endif

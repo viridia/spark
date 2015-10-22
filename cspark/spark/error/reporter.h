@@ -161,6 +161,9 @@ public:
 
   void report(Severity sev, Location loc, StringRef msg);
 
+  /** Print a stack backtrace if possible. */
+  static void printStackTrace(int skipFrames);
+
 private:
   int _messageCountArray[SEVERITY_LEVELS];
 //   RecoveryState _recovery;
