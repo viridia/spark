@@ -95,10 +95,10 @@ Property::~Property() {
   for (TypeParameter* tparam : _typeParams) {
     delete tparam;
   }
-  if (_getter != NULL) {
+  if (_getter != nullptr) {
     delete _getter;
   }
-  if (_setter != NULL) {
+  if (_setter != nullptr) {
     delete _setter;
   }
 }

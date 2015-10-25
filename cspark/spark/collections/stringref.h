@@ -40,7 +40,7 @@ public:
   typedef const char* const_iterator;
 
   /// Construct an empty StringRef.
-  StringRef() : _data(NULL), _size(0) {}
+  StringRef() : _data(nullptr), _size(0) {}
 
   /** Construct a StringRef from a C string. */
   template <size_t Size>
@@ -74,6 +74,13 @@ public:
     return !operator==(lhs, rhs);
   }
 
+  /** Assignment. */
+  StringRef& operator=(const StringRef& str) {
+    _data = str._data;
+    _size = str._size;
+    return *this;
+  }
+
   // Iterators
 
   iterator begin() const { return _data; }
@@ -95,6 +102,16 @@ public:
       return std::memcmp(suffix._data, &_data[_size - suffix._size], suffix._size) == 0;
     }
     return false;
+  }
+
+  /** Return the index of the first ocurrance of the character `ch` in this string. */
+  int find(char ch, int start = 0) const {
+    for (int i = start; i < _size; ++i) {
+      if (_data[i] == ch) {
+        return i;
+      }
+    }
+    return -1;
   }
 
   /** Read-only random access. */

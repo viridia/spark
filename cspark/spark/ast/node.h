@@ -43,11 +43,11 @@ public:
   const source::Location& location() const { return _location; }
 
   static inline bool isError(const Node* node) {
-    return node == NULL || node->kind() == Kind::ERROR;
+    return node == nullptr || node->kind() == Kind::ERROR;
   }
 
   static inline bool isPresent(const Node* node) {
-    return node != NULL && node->kind() != Kind::ABSENT;
+    return node != nullptr && node->kind() != Kind::ABSENT;
   }
 
   static Node ERROR; // Sentinel node that indicate errors.

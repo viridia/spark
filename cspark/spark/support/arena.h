@@ -9,6 +9,10 @@
   #include <spark/collections/stringref.h>
 #endif
 
+#ifndef SPARK_COLLECTIONS_ARRAYREF_H
+  #include <spark/collections/arrayref.h>
+#endif
+
 #if SPARK_HAVE_NEW
   #include <new>
 #endif
@@ -30,9 +34,9 @@ public:
   static const std::size_t DEFAULT_BLOCK_SIZE = 0x10000 - BLOCK_HEADER_SIZE; // 64K
 
   Arena(std::size_t blockSize = DEFAULT_BLOCK_SIZE)
-    : _head(NULL)
-    , _pos(NULL)
-    , _end(NULL)
+    : _head(nullptr)
+    , _pos(nullptr)
+    , _end(nullptr)
     , _blockSize(blockSize)
   {}
 
@@ -76,6 +80,14 @@ public:
     value_type* data = allocate(str.size());
     std::copy(str.begin(), str.end(), data);
     return collections::StringRef((char*) data, str.size());
+  }
+
+  /** Make a long-lived copy of this ArrayRef. */
+  template<class T>
+  collections::ArrayRef<T> copyOf(const collections::ArrayRef<T>& array) {
+    T* data = reinterpret_cast<T*>(allocate(array.size() * sizeof(T)));
+    std::copy(array.begin(), array.end(), data);
+    return collections::ArrayRef<T>((T*) data, array.size());
   }
 private:
   Block* _head;

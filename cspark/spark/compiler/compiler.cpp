@@ -125,7 +125,7 @@ semgraph::Module* Compiler::parseImportSource(const Path& path) {
   if (modules.size() == 1) {
     return modules.front();
   }
-  return NULL;
+  return nullptr;
 }
 
 void Compiler::processDir(const Path& path, ModuleList& modules) {
@@ -163,11 +163,11 @@ void Compiler::processFile(const Path& path, ModuleList& modules) {
   // been read in.
   // This lazily constructs the package tree if it doesn't already exist.
   semgraph::Package* package = _fsImporter->getPackageForPath(path.parent());
-  assert(package != NULL);
+  assert(package != nullptr);
   semgraph::Module* module = new semgraph::Module(src, path.stem(), package);
   parse::Parser parser(_reporter, src, module->astArena());
   const ast::Module* modAst = parser.module();
-  if (modAst != NULL) {
+  if (modAst != nullptr) {
     module->setAst(modAst);
     module->path() = path;
     modules.push_back(module);

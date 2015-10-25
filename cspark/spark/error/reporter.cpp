@@ -112,7 +112,7 @@ void ConsoleReporter::report(Severity sev, Location loc, StringRef msg) {
   #endif
 
   bool showErrorLine = false;
-  if (loc.source != NULL && !loc.source->path().empty()) {
+  if (loc.source != nullptr && !loc.source->path().empty()) {
     std::cerr << loc.source->path() << ":" << loc.startLine << ":" << loc.startCol << ": ";
     showErrorLine = true;
   }
@@ -182,12 +182,12 @@ void ConsoleReporter::printStackTrace(int skipFrames) {
   for (int i = skipFrames; i < depth; ++i) {
     Dl_info dlinfo;
     dladdr(stackTrace[i], &dlinfo);
-    if (dlinfo.dli_sname != NULL) {
+    if (dlinfo.dli_sname != nullptr) {
       ::fputs("   ", stderr);
 #if SPARK_HAVE_CXXABI_H
       int status;
-      char* d = abi::__cxa_demangle(dlinfo.dli_sname, NULL, NULL, &status);
-      if (d == NULL) ::fputs(dlinfo.dli_sname, stderr);
+      char* d = abi::__cxa_demangle(dlinfo.dli_sname, nullptr, nullptr, &status);
+      if (d == nullptr) ::fputs(dlinfo.dli_sname, stderr);
       else           ::fputs(d, stderr);
       ::free(d);
 #else
@@ -212,7 +212,7 @@ void ConsoleReporter::printStackTrace(int skipFrames) {
         // need to come up with something that will work on various platforms.
         // fprintf(outstream, "%s\n", symbol);
         char* begin = strchr(symbol, '_');
-        char* demangled_name = NULL;
+        char* demangled_name = nullptr;
         if (begin) {
           char* end = ::strchr(begin, ' ');
           if (end) {
@@ -222,12 +222,12 @@ void ConsoleReporter::printStackTrace(int skipFrames) {
           }
         }
 
-        if (demangled_name != NULL) {
+        if (demangled_name != nullptr) {
           ::fprintf(stderr, "    %s\n", demangled_name);
 
           // Result may be a realloc of input buffer.
           buffer = demangled_name;
-        } else if (begin != NULL){
+        } else if (begin != nullptr){
           ::fprintf(stderr, "    %s\n", begin);
         }
       }

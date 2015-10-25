@@ -64,7 +64,7 @@ public:
     bool rightAssoc;
 
     Entry()
-      : operand(NULL)
+      : operand(nullptr)
       , oper(ast::Kind::ABSENT)
       , precedence(0)
       , rightAssoc(false)

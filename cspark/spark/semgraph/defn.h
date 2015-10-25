@@ -25,6 +25,14 @@
   #include "spark/scope/stdscope.h"
 #endif
 
+#ifndef SPARK_SCOPE_INHERITEDSCOPE_H
+  #include "spark/scope/inheritedscope.h"
+#endif
+
+#ifndef SPARK_SEMGRAPH_ENV_H
+  #include "spark/semgraph/env.h"
+#endif
+
 #if SPARK_HAVE_MEMORY
   #include <memory>
 #endif
@@ -65,21 +73,20 @@ public:
     TYPE_PARAM,
     FUNCTION,
     PROPERTY,
-    FRIEND,
 
     MODULE,
     PACKAGE,
 
     // Internal types
-    INSTANTIATED,   // A combination of generic member and type arguments for it
+    SPECIALIZED,   // A combination of generic member and type arguments for it
     TUPLE_MEMBER,
   };
 
-  Member(Kind kind, const StringRef& name, Member* definedIn = NULL)
+  Member(Kind kind, const StringRef& name, Member* definedIn = nullptr)
     : _kind(kind)
     , _name(name.begin(), name.end())
     , _definedIn(definedIn)
-    , _ast(NULL)
+    , _ast(nullptr)
   {}
 
   virtual ~Member();
@@ -94,10 +101,29 @@ public:
   /** The name of this member. */
   StringRef name() const { return _name; }
 
+  /** Return the definition enclosing this one. */
+  Member* definedIn() const { return _definedIn; }
+
   /** Produce a string representation of this member (for unit tests). */
   virtual void format(std::ostream& out) const = 0;
 
+  /** Return the complete qualified name of this member, not including type parameters. */
+  std::string qualifiedName() const {
+    std::string result;
+    qualifiedName(result);
+    return result;
+  }
+  void qualifiedName(std::string& result) const {
+    if (_definedIn) {
+      _definedIn->qualifiedName(result);
+      result.push_back('.');
+    }
+    result.insert(result.end(), _name.begin(), _name.end());
+  }
+
 protected:
+
+
   const Kind _kind;
   const std::string _name;
   Member* _definedIn;
@@ -106,11 +132,12 @@ protected:
 
 /** List of members. */
 typedef std::vector<Member*> MemberList;
+typedef ArrayRef<Member*> MemberArray;
 
 /** A definition, that is, any type or object that has a name. */
 class Defn : public Member {
 public:
-  Defn(Kind kind, const source::Location& location, const StringRef& name, Member* definedIn = NULL)
+  Defn(Kind kind, const source::Location& location, const StringRef& name, Member* definedIn = nullptr)
     : Member(kind, name, definedIn)
     , _location(location)
     , _visibility(PUBLIC)
@@ -181,7 +208,7 @@ public:
   TypeDefn(Kind kind, const source::Location& location, const StringRef& name, Member* definedIn)
     : Defn(kind, location, name, definedIn)
     , _memberScope(new scope::StandardScope(scope::SymbolScope::INSTANCE, this))
-    , _inheritedMemberScope(new scope::StandardScope(scope::SymbolScope::INSTANCE, this))
+    , _inheritedMemberScope(new scope::InheritedScope(_memberScope.get(), this))
     , _typeParamScope(new scope::StandardScope(scope::SymbolScope::DEFAULT, this))
   {
   }
@@ -205,7 +232,7 @@ public:
 
   /** Scope containing all of the members of this type, including inherited members (but
       only non-shadowed inherited members. */
-  scope::StandardScope* inheritedMemberScope() const { return _inheritedMemberScope.get(); }
+  scope::InheritedScope* inheritedMemberScope() const { return _inheritedMemberScope.get(); }
 
   /** Scope containing all of the type parameters of this type. */
   scope::StandardScope* typeParamScope() const { return _typeParamScope.get(); }
@@ -217,10 +244,10 @@ private:
   std::vector<Member*> _members;
   std::vector<TypeParameter*> _typeParams;
   std::auto_ptr<scope::StandardScope> _memberScope;
-  std::auto_ptr<scope::StandardScope> _inheritedMemberScope;
+  std::auto_ptr<scope::InheritedScope> _inheritedMemberScope;
   std::auto_ptr<scope::StandardScope> _typeParamScope;
 
-//   # List of friend declarations for this class
+//   # List of friend declarations for thibs class
 //   friends: list[Member] = 3;
 //
 //   # Set if this is an intrinsic type
@@ -233,16 +260,16 @@ private:
 /** A type parameter of a function or composite type. */
 class TypeParameter : public Defn {
 public:
-  TypeParameter(const source::Location& location, const StringRef& name, Member* definedIn = NULL)
+  TypeParameter(const source::Location& location, const StringRef& name, Member* definedIn = nullptr)
     : Defn(Kind::TYPE_PARAM, location, name, definedIn)
-    , _valueType(NULL)
-    , _typeVar(NULL)
-    , _defaultType(NULL)
+    , _valueType(nullptr)
+    , _typeVar(nullptr)
+    , _defaultType(nullptr)
     , _variadic(false)
   {}
 
   /** If this type parameter represents a constant value rather than a type, then this is
-      the type of that constant value. Otherwise, this is NULL. */
+      the type of that constant value. Otherwise, this is nullptr. */
   Type* valueType() const { return _valueType; }
   void setValueType(Type* type) { _valueType = type; }
 
@@ -252,7 +279,7 @@ public:
   void setTypeVar(TypeVariable* type) { _typeVar = type; }
 
   /** If this type pararameter holds a type expression, this is the default value for
-      the type parameter. NULL if no default has been specified. */
+      the type parameter. nullptr if no default has been specified. */
   Type* defaultType() const { return _defaultType; }
   void setDefaultType(Type* type) { _defaultType = type; }
 
@@ -278,10 +305,10 @@ private:
 class ValueDefn : public Defn {
 public:
   ValueDefn(
-      Kind kind, const source::Location& location, const StringRef& name, Member* definedIn = NULL)
+      Kind kind, const source::Location& location, const StringRef& name, Member* definedIn = nullptr)
     : Defn(kind, location, name, definedIn)
-    , _type(NULL)
-    , _init(NULL)
+    , _type(nullptr)
+    , _init(nullptr)
     , _fieldIndex(0)
   {}
 
@@ -314,9 +341,9 @@ private:
 
 class Parameter : public ValueDefn {
 public:
-  Parameter(const source::Location& location, const StringRef& name, Member* definedIn = NULL)
+  Parameter(const source::Location& location, const StringRef& name, Member* definedIn = nullptr)
     : ValueDefn(Kind::PARAM, location, name, definedIn)
-    , _internalType(NULL)
+    , _internalType(nullptr)
     , _keywordOnly(false)
     , _selfParam(false)
     , _classParam(false)
@@ -366,12 +393,12 @@ private:
 /** A method or global function. */
 class Function : public Defn {
 public:
-  Function(const source::Location& location, const StringRef& name, Member* definedIn = NULL)
+  Function(const source::Location& location, const StringRef& name, Member* definedIn = nullptr)
     : Defn(Kind::FUNCTION, location, name, definedIn)
-    , _type(NULL)
+    , _type(nullptr)
     , _paramScope(new scope::StandardScope(scope::SymbolScope::DEFAULT, this))
     , _typeParamScope(new scope::StandardScope(scope::SymbolScope::DEFAULT, this))
-    , _body(NULL)
+    , _body(nullptr)
     , _constructor(false)
     , _requirement(false)
     , _native(false)
@@ -402,7 +429,7 @@ public:
   std::vector<Defn*>& localDefns() { return _localDefns; }
   const std::vector<Defn*>& localDefns() const { return _localDefns; }
 
-  /** The function body. NULL if no body has been declared. */
+  /** The function body. nullptr if no body has been declared. */
   Expr* body() const { return _body; }
   void setBody(Expr* body) { _body = body; }
 
@@ -445,13 +472,13 @@ private:
 /** A property definition. */
 class Property : public Defn {
 public:
-  Property(const source::Location& location, const StringRef& name, Member* definedIn = NULL)
+  Property(const source::Location& location, const StringRef& name, Member* definedIn = nullptr)
     : Defn(Kind::FUNCTION, location, name, definedIn)
-    , _type(NULL)
+    , _type(nullptr)
     , _paramScope(new scope::StandardScope(scope::SymbolScope::DEFAULT, this))
     , _typeParamScope(new scope::StandardScope(scope::SymbolScope::DEFAULT, this))
-    , _getter(NULL)
-    , _setter(NULL)
+    , _getter(nullptr)
+    , _setter(nullptr)
   {}
 
   ~Property();
@@ -493,6 +520,27 @@ private:
   Function* _getter;
   Function* _setter;
 //  selfType : type.Type = 7 [nullable]; # Type of the 'self' argument (not part of the function type).
+};
+
+class SpecializedMember : public Member {
+public:
+  SpecializedMember(Member* generic, const Env& env)
+    : Member(Kind::SPECIALIZED, generic->name(), generic->definedIn())
+    , _generic(generic)
+    , _env(env)
+  {}
+
+  /** The generic version of this specialized member. */
+  Member* generic() const { return _generic; }
+  void setGeneric(Member* t) { _generic = t; }
+
+  /** The set of variable bindings for the generic type. */
+  Env& env() { return _env; }
+  const Env& env() const { return _env; }
+
+private:
+  Member* _generic;
+  Env _env;
 };
 
 // struct InstantiatedMember(Member) = MemberKind.INSTANTIATED {

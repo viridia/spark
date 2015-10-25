@@ -18,16 +18,16 @@ using semgraph::Expr;
 
 /** The result of a name lookup operation. */
 struct NameLookupResult {
-  NameLookupResult() : scope(NULL), base(NULL) {}
+  NameLookupResult() : scope(nullptr), stem(nullptr) {}
   NameLookupResult(const NameLookupResult& src)
     : members(src.members)
     , scope(src.scope)
-    , base(src.base)
+    , stem(src.stem)
   {}
   NameLookupResult(const NameLookupResult&& src)
     : members(std::move(src.members))
     , scope(src.scope)
-    , base(src.base)
+    , stem(src.stem)
   {}
 
   /** List of members found. */
@@ -37,31 +37,31 @@ struct NameLookupResult {
   SymbolScope* scope;
 
   /** Expression representing the object containing the members. */
-  Expr* base;
+  Expr* stem;
 };
 
 /** Represents the set of nested lookup scopes for the current lookup context. */
 class ScopeStack {
 public:
   struct Entry {
-    Entry() : scope(NULL), base(NULL) {}
-    Entry(const Entry& src) : scope(src.scope), base(src.base) {}
-    Entry(SymbolScope* s, Expr* b) : scope(s), base(b) {}
+    Entry() : scope(nullptr), stem(nullptr) {}
+    Entry(const Entry& src) : scope(src.scope), stem(src.stem) {}
+    Entry(SymbolScope* s, Expr* b) : scope(s), stem(b) {}
 
     Entry& operator=(const Entry& src) {
       scope = src.scope;
-      base = src.base;
+      stem = src.stem;
       return *this;
     }
 
     SymbolScope* scope;
-    Expr* base;
+    Expr* stem;
   };
 
-  /** Push a new scope onto the stack. The optional 'base' expression is a reference to the
-      object whose type defines the scope. Most often, 'base' will be a 'self' expression. */
-  void push(SymbolScope* scope, Expr* base = NULL) {
-    _stack.push_back(Entry(scope, base));
+  /** Push a new scope onto the stack. The optional 'stem' expression is a reference to the
+      object whose type defines the scope. Most often, 'stem' will be a 'self' expression. */
+  void push(SymbolScope* scope, Expr* stem = nullptr) {
+    _stack.push_back(Entry(scope, stem));
   }
 
   /** Remove the top-most scope from the stack. */
@@ -73,14 +73,24 @@ public:
     NameLookupResult result;
     auto it = _stack.end();
     while (it != _stack.begin()) {
+      --it;
       it->scope->lookupName(name, result.members);
       if (!result.members.empty()) {
         result.scope = it->scope;
-        result.base = it->base;
+        result.stem = it->stem;
         return result;
       }
     }
     return result;
+  }
+
+  /** Call the specified functor for all names defined in this scope. */
+  void forAllNames(NameFunctor& nameFn) const {
+    auto it = _stack.end();
+    while (it != _stack.begin()) {
+      --it;
+      it->scope->forAllNames(nameFn);
+    }
   }
 
   /** The current size of the stack. */

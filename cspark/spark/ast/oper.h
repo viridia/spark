@@ -36,7 +36,7 @@ class Oper : public Node {
 public:
   Oper(Kind kind, const Location& location, NodeList operands)
     : Node(kind, location)
-    , _op(NULL)
+    , _op(nullptr)
     , _operands(operands)
   {}
 

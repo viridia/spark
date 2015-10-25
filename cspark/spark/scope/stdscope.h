@@ -31,15 +31,15 @@ using semgraph::Member;
 
 class StandardScope : public SymbolScope {
 public:
-  StandardScope(ScopeType st) : _scopeType(st), _member(NULL) {}
+  StandardScope(ScopeType st) : _scopeType(st), _owner(NULL) {}
   StandardScope(ScopeType st, const StringRef& description)
     : _scopeType(st)
     , _description(description.begin(), description.end())
-    , _member(NULL)
+    , _owner(NULL)
   {}
-  StandardScope(ScopeType st, const semgraph::Member* member)
+  StandardScope(ScopeType st, const semgraph::Member* owner)
     : _scopeType(st)
-    , _member(member)
+    , _owner(owner)
   {}
 
   /** Add a member to this scope. */
@@ -55,7 +55,7 @@ protected:
   ScopeType _scopeType;
   EntryMap _entries;
   std::string _description;
-  const semgraph::Member* _member;
+  const semgraph::Member* _owner;
 };
 
 }}

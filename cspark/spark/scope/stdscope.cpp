@@ -1,7 +1,3 @@
-// ============================================================================
-// Standard Scope implementation.
-// ============================================================================
-
 #include "spark/scope/stdscope.h"
 #include "spark/semgraph/defn.h"
 
@@ -27,11 +23,11 @@ void StandardScope::forAllNames(NameFunctor& nameFn) const {
 }
 
 void StandardScope::describe(std::ostream& strm) const {
-  if (_member) {
+  if (_owner) {
     if (_description.size() > 0) {
-      strm << _description << " scope for " << _member->name();
+      strm << _description << " scope for " << _owner->name();
     } else {
-      strm << "scope for " << _member->name();
+      strm << "scope for " << _owner->name();
     }
   } else if (_description.size() > 0) {
     strm << _description << " scope";

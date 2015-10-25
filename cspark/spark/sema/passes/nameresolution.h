@@ -21,8 +21,20 @@
   #include "spark/semgraph/defn.h"
 #endif
 
+#ifndef SPARK_SEMGRAPH_TYPE_H
+  #include "spark/semgraph/type.h"
+#endif
+
+#ifndef SPARK_SEMGRAPH_PACKAGE_H
+  #include "spark/semgraph/package.h"
+#endif
+
 #ifndef SPARK_SEMGRAPH_DEFNVISITOR_H
   #include "spark/semgraph/defnvisitor.h"
+#endif
+
+#ifndef SPARK_SUPPORT_ARENA_H
+  #include "spark/support/arena.h"
 #endif
 
 namespace spark {
@@ -52,12 +64,15 @@ public:
 
 private:
   void resolveImports(semgraph::Module* mod);
+  void resolveClassBases(semgraph::Composite* cls);
+  semgraph::Type* resolveType(const ast::Node* ast);
   void findAbsoluteSymbol(const ast::Node* node, std::vector<semgraph::Member*> &result);
+  semgraph::Package* findPackage(const collections::StringRef& qname);
 
   support::Arena* _arena;
+  support::Arena _tempArena;
   sema::names::Subject _subject;
   std::auto_ptr<scope::ScopeStack> _scopeStack;
-  std::auto_ptr<names::ResolveTypes> _resolveTypes;
 
   support::Arena& arena();
 };

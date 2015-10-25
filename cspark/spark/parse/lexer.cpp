@@ -192,7 +192,7 @@ TokenType Lexer::next() {
     } else if (_ch == '/') {
       // Check for comment start
       readCh();
-      DocComment * docComment = NULL;
+      DocComment * docComment = nullptr;
 //       SourceLocation commentLocation(tokenLocation_.file, currentOffset_, currentOffset_);
 //       llvm::SmallString<128> commentText;
       if (_ch == '/') {
@@ -205,7 +205,7 @@ TokenType Lexer::next() {
         }
 
         while (_ch != EOF && _ch != '\n' && _ch != '\r') {
-          if (docComment != NULL) {
+          if (docComment != nullptr) {
             // Expand tabs
             if (_ch == '\t') {
               while ((_col++ % 4) != 1) {
@@ -217,7 +217,7 @@ TokenType Lexer::next() {
           }
           readCh();
         }
-        if (docComment != NULL) {
+        if (docComment != nullptr) {
           _commentText.push_back('\n');
 //           commentLocation.end = currentOffset_;
 //           docComment->entries().push_back(
@@ -251,7 +251,7 @@ TokenType Lexer::next() {
               readCh();
               break;
             } else {
-//               if (docComment != NULL) {
+//               if (docComment != nullptr) {
 //                 _commentText.push_back('*');
 //               }
               // Push the star we skipped, and reprocess the following char
@@ -266,13 +266,13 @@ TokenType Lexer::next() {
               if (_ch == '\n') {
                 readCh();
               }
-//               if (docComment != NULL) {
+//               if (docComment != nullptr) {
 //                 _commentText.push_back('\n');
 //               }
               _col = 1;
               _line += 1;
             } else {
-              if (docComment != NULL) {
+              if (docComment != nullptr) {
                 // Expand tabs
                 if (_ch == '\t') {
                   while ((_col++ % 4) != 1) {
@@ -286,7 +286,7 @@ TokenType Lexer::next() {
             }
           }
         }
-//         if (docComment != NULL) {
+//         if (docComment != nullptr) {
 //           commentLocation.end = currentOffset_;
 //           docComment->entries().push_back(
 //               new DocComment::Entry(commentLocation, commentText));
@@ -762,7 +762,7 @@ bool Lexer::readEscapeChars() {
       }
 
       charbuf[len] = 0;
-      long charVal = ::strtoul(charbuf, NULL, 16);
+      long charVal = ::strtoul(charbuf, nullptr, 16);
       _tokenValue.push_back(charVal);
       break;
     }
@@ -786,7 +786,7 @@ bool Lexer::readEscapeChars() {
 
       charbuf[len] = 0;
       assert(false && "Implement wide character escaped literals.");
-//       wchar_t charVal = ::strtoul(charbuf, NULL, 16);
+//       wchar_t charVal = ::strtoul(charbuf, nullptr, 16);
 //
 //       std::byte_string converted = std::wstring_convert(charVal);
 //       if (!encodeUnicodeChar(charVal)) {

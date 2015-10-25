@@ -26,7 +26,7 @@ public:
   Defn(Kind kind, const Location& location, const StringRef& name)
     : Node(kind, location)
     , _name(name)
-    , _docComment(NULL)
+    , _docComment(nullptr)
     , _private(false)
     , _protected(false)
     , _static(false)
@@ -127,8 +127,8 @@ class ValueDefn : public Defn {
 public:
   ValueDefn(Kind kind, const Location& location, const StringRef& name)
     : Defn(kind, location, name)
-    , _type(NULL)
-    , _init(NULL)
+    , _type(nullptr)
+    , _init(nullptr)
   {}
 
   const Node* type() const { return _type; }
@@ -198,8 +198,8 @@ class TypeParameter : public Defn {
 public:
   TypeParameter(const Location& location, const StringRef& name)
     : Defn(Kind::TYPE_PARAMETER, location, name)
-    , _type(NULL)
-    , _init(NULL)
+    , _type(nullptr)
+    , _init(nullptr)
     , _variadic(false)
   {}
 
@@ -228,12 +228,12 @@ class Function : public Defn {
 public:
   Function(const Location& location, const StringRef& name)
     : Defn(Kind::FUNCTION, location, name)
-    , _type(NULL)
-    , _body(NULL)
+    , _type(nullptr)
+    , _body(nullptr)
     , _constructor(false)
     , _requirement(false)
     , _native(false)
-    , _selfType(NULL)
+    , _selfType(nullptr)
   {}
 
   /** Type of this defn. */
@@ -277,10 +277,10 @@ class Property : public Defn {
 public:
   Property(const Location& location, const StringRef& name)
     : Defn(Kind::PROPERTY, location, name)
-    , _type(NULL)
-    , _getter(NULL)
-    , _setter(NULL)
-    , _selfType(NULL)
+    , _type(nullptr)
+    , _getter(nullptr)
+    , _setter(nullptr)
+    , _selfType(nullptr)
   {}
 
   /** Type of this defn. */

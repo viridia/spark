@@ -13,6 +13,10 @@
   #include <iterator>
 #endif
 
+#if SPARK_HAVE_CASSERT
+  #include <cassert>
+#endif
+
 #if SPARK_HAVE_VECTOR
   #include <vector>
 #endif
@@ -31,7 +35,7 @@ public:
   typedef size_t size_type;
 
   /** Construct an empty ArrayRef. */
-  ArrayRef() : _data(NULL), _size(0) {}
+  ArrayRef() : _data(nullptr), _size(0) {}
 
   /** Copy constructor. */
   ArrayRef(const ArrayRef& src) : _data(src._data), _size(src._size) {}

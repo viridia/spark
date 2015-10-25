@@ -12,24 +12,55 @@ namespace sema {
 namespace names {
 using namespace semgraph;
 
-semgraph::Type* ResolveTypes::exec(const ast::Node* node) {
-  switch (node->kind()) {
-    case ast::Kind::IDENT:
-      return visitIdent(static_cast<const ast::Ident*>(node));
-    default:
-      _reporter.fatal() << "Invalid AST node kind: " << node->kind();
-      return NULL;
-  }
+Type* ResolveTypes::visitExpr(Expr* e) {
+  _reporter.error(e->location()) << "Expression is not a type.";
+  return &Type::ERROR;
 }
 
-Type* ResolveTypes::visitIdent(const ast::Ident* ident) {
-  scope::NameLookupResult lookupResult = _scopeStack->find(ident->name());
-  if (lookupResult.members.empty()) {
-    // Do fuzzy lookup.
-    _reporter.error(ident->location()) << "Name lookup failed: " << ident->name();
-  }
-  (void)_typeStore;
+Type* ResolveTypes::visitInvalid(Expr* e) {
   return &Type::ERROR;
+}
+
+Type* ResolveTypes::visitSpecialize(Call* e) {
+  Type* generic = exec(e->callable());
+  if (Type::isError(generic)) {
+    return generic;
+  }
+  std::vector<Type*> typeArgs;
+  for (auto arg : e->arguments()) {
+    auto argExpr = exec(arg);
+    if (Type::isError(argExpr)) {
+      return argExpr;
+    }
+  }
+
+  // Make sure that generic is in fact a generic type.
+  // Resolve overloads.
+  // Make sure it has the right number of type params (including variadic and default params).
+  // Build an Env.
+
+  SpecializedType* st = new (_arena) SpecializedType(generic, Env());
+  (void)st;
+  assert(false && "Implement ResolveTypes::visitSpecialize.");
+}
+
+Type* ResolveTypes::visitMemberSet(MemberSet* mset) {
+  if (mset->genus() != MemberSet::Genus::TYPE) {
+    _reporter.error(mset->location()) << "Expression is not a type: " << mset->name();
+    return &Type::ERROR;
+  }
+//       else:
+//         types = set()
+//         for m in expr.getMembers():
+//           t = defns.getMemberType(m)
+//           if not self.isErrorType(t):
+//             types.add(t)
+//         if len(types) == 1:
+//           (t,) = types
+//           return t
+//         else:
+//           return self.typeStore.newTypeSet(types)
+  assert(false && "Implement ResolveTypes::visitMemberSet.");
 }
 
 //   @accept(ast.Ident)

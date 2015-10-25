@@ -143,7 +143,7 @@ bool DirectoryScope::lookupFsName(
 #endif
     if (fileExistsWithSameCase(srcPath)) {
       Module* module = _context.importModuleFromSource(srcPath);
-      if (module != NULL) {
+      if (module != nullptr) {
         result.push_back(module);
         // The compiler should have added the module to this package.
         auto it = _entries.find(name);
@@ -155,7 +155,13 @@ bool DirectoryScope::lookupFsName(
 }
 
 void DirectoryScope::forAllNames(scope::NameFunctor& nameFn) const {
-  assert(false);
+  for (auto name : _filenames) {
+    Path filePath(name);
+    nameFn(filePath.stem());
+  }
+  for (auto it : _aliases) {
+    nameFn(it.first);
+  }
 }
 
 void DirectoryScope::describe(std::ostream& strm) const {
@@ -176,7 +182,7 @@ FileSystemImporter::~FileSystemImporter() {
 }
 
 void FileSystemImporter::addPath(const Path& path) {
-  auto package = new semgraph::Package(path.name(), NULL);
+  auto package = new semgraph::Package(path.name(), nullptr);
   package->setMemberScope(new DirectoryScope(path, package, _context));
   package->path() = path;
   _roots.push_back(package);
@@ -214,7 +220,7 @@ semgraph::Package* FileSystemImporter::getPackageForPath(const Path& path) {
       }
     }
   }
-  return NULL;
+  return nullptr;
 }
 
 }}

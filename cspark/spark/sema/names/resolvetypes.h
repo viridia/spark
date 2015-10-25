@@ -5,39 +5,45 @@
 #ifndef SPARK_SEMA_NAMES_RESOLVETYPES_H
 #define SPARK_SEMA_NAMES_RESOLVETYPES_H 1
 
-#ifndef SPARK_CONFIG_H
-  #include "spark/config.h"
-#include <../lib/spark/core/string.sp>
+#ifndef SPARK_SEMGRAPH_EXPRVISITOR_H
+  #include "spark/semgraph/exprvisitor.h"
 #endif
 
 namespace spark {
-namespace ast { class Node; }
 namespace compiler { class TypeStore; }
 namespace error { class Reporter; }
-namespace semgraph { class Type; }
-namespace scope { class ScopeStack; }
 namespace sema {
 namespace names {
 using error::Reporter;
 using semgraph::Type;
+using semgraph::Expr;
+using semgraph::Call;
+using semgraph::MemberSet;
 
 /** Name resolver specialized for resolving types. */
-class ResolveTypes {
+class ResolveTypes : public semgraph::ExprVisitor<Type*> {
 public:
-  ResolveTypes(Reporter& reporter, compiler::TypeStore* typeStore, scope::ScopeStack* scopeStack)
+  ResolveTypes(
+      Reporter& reporter,
+      compiler::TypeStore* typeStore,
+      support::Arena& arena)
     : _reporter(reporter)
     , _typeStore(typeStore)
-    , _scopeStack(scopeStack)
-  {}
-
-  Type* exec(const ast::Node* node);
+    , _arena(arena)
+  {
+    (void)_arena;
+    (void)_typeStore;
+  }
 
 private:
-  Type* visitIdent(const ast::Ident* ident);
+  Type* visitExpr(Expr* e) final;
+  Type* visitInvalid(Expr* e) final;
+  Type* visitSpecialize(Call* e) final;
+  Type* visitMemberSet(MemberSet* e) final;
 
   Reporter& _reporter;
   compiler::TypeStore* _typeStore;
-  scope::ScopeStack* _scopeStack;
+  support::Arena& _arena;
 };
 
 }}}

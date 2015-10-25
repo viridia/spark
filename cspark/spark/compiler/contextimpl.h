@@ -28,15 +28,15 @@ class ContextImpl : public Context {
 public:
   ContextImpl(Reporter& reporter, Compiler& compiler);
 
-  Reporter& reporter() const { return _reporter; }
-  Arena& arena() { return _arena; }
-  ModuleList& sourceModules() { return _sourceModules; }
-  ModuleList& sourceImportModules() { return _sourceImportModules; }
-  semgraph::Module* importModuleFromSource(const support::Path& path);
-  bool moduleSetsChanged() const { return _moduleSetsChanged; }
-  void setModuleSetsChanged(bool changed) { _moduleSetsChanged = changed; }
-  scope::ModulePathScope* modulePathScope() const { return _modulePathScope.get(); }
-  TypeStore* typeStore() const;
+  Reporter& reporter() const final { return _reporter; }
+  Arena& arena() final { return _arena; }
+  ModuleList& sourceModules() final { return _sourceModules; }
+  ModuleList& sourceImportModules() final { return _sourceImportModules; }
+  semgraph::Module* importModuleFromSource(const support::Path& path) final;
+  bool moduleSetsChanged() const final { return _moduleSetsChanged; }
+  void setModuleSetsChanged(bool changed) final { _moduleSetsChanged = changed; }
+  scope::ModulePathScope* modulePathScope() const final { return _modulePathScope.get(); }
+  TypeStore* typeStore() const final;
 
 private:
   Reporter& _reporter;

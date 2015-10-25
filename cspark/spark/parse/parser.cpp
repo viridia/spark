@@ -77,15 +77,15 @@ ast::Module* Parser::module() {
   while (match(TOKEN_IMPORT)) {
     if (_token != TOKEN_ID) {
       _reporter.error(location()) << "Module name expected.";
-      return NULL;
+      return nullptr;
     }
     Node* path = dottedIdent();
-    assert(path != NULL);
+    assert(path != nullptr);
     StringRef alias;
     if (match(TOKEN_AS)) {
       if (_token != TOKEN_ID) {
         _reporter.error(location()) << "Identifier expected.";
-        return NULL;
+        return nullptr;
       }
       alias = copyOf(tokenValue());
     }
@@ -99,7 +99,7 @@ ast::Module* Parser::module() {
 
   while (_token != TOKEN_END) {
     if (!declaration(members)) {
-      return NULL;
+      return nullptr;
     }
   }
 
@@ -170,7 +170,7 @@ bool Parser::declaration(ast::NodeListBuilder& decls, bool isProtected, bool isP
   }
 
   Defn* d = memberDef();
-  if (d != NULL) {
+  if (d != nullptr) {
     d->setPrivate(isPrivate);
     d->setProtected(isProtected);
     d->setAbstract(isAbstract);
@@ -255,7 +255,7 @@ Defn* Parser::compositeTypeDef() {
     ast::NodeListBuilder baseTypes(_arena);
     for (;;) {
       Node* base = typeExpression();
-      if (base == NULL) {
+      if (base == nullptr) {
         skipUntil({TOKEN_LBRACE});
         return d;
       }
@@ -278,7 +278,7 @@ Defn* Parser::compositeTypeDef() {
     skipOverDefn();
   } else {
     if (!classBody(d)) {
-      return NULL;
+      return nullptr;
     }
   }
 
@@ -301,7 +301,7 @@ bool Parser::classBody(ast::TypeDefn* d) {
 bool Parser::classMember(ast::NodeListBuilder &members, ast::NodeListBuilder &friends) {
   if (match(TOKEN_FRIEND)) {
     Node* friendDecl = dottedIdent();
-    if (friendDecl == NULL) {
+    if (friendDecl == nullptr) {
       expected("class or function name");
       skipUntil({TOKEN_SEMI, TOKEN_RBRACE});
     }
@@ -340,7 +340,7 @@ Defn* Parser::enumTypeDef() {
     ast::NodeListBuilder baseTypes(_arena);
     for (;;) {
       Node* base = typeExpression();
-      if (base == NULL) {
+      if (base == nullptr) {
         skipUntil({TOKEN_LBRACE});
         return d;
       }
@@ -363,16 +363,16 @@ Defn* Parser::enumTypeDef() {
     while (!match(TOKEN_RBRACE)) {
       if (_token == TOKEN_END) {
         _reporter.error(loc) << "Incomplete enum.";
-        return NULL;
+        return nullptr;
       }
       if (defnMode || ENUM_MEMBERS.find(_token) != ENUM_MEMBERS.end()) {
         defnMode = true;
         if (!classMember(members, friends)) {
-          return NULL;
+          return nullptr;
         }
       } else {
         if (!enumMember(members)) {
-          return NULL;
+          return nullptr;
         }
       }
 
@@ -402,7 +402,7 @@ bool Parser::enumMember(ast::NodeListBuilder &members) {
   // Initializer
   if (match(TOKEN_ASSIGN)) {
     Node* init = expression();
-    if (init != NULL) {
+    if (init != nullptr) {
       ev->setInit(init);
     }
   } else if (match(TOKEN_LPAREN)) {
@@ -442,12 +442,12 @@ Defn* Parser::methodDef() {
   if (_token == TOKEN_LPAREN) {
     if (!paramList(params)) {
       skipOverDefn();
-      return NULL;
+      return nullptr;
     }
   } else if (name.empty()) {
     expected("function parameter list");
     skipOverDefn();
-    return NULL;
+    return nullptr;
   }
 
   if (name.empty()) {
@@ -457,9 +457,9 @@ Defn* Parser::methodDef() {
   bool hasReturnType = false;
   if (match(TOKEN_RETURNS)) {
     Node* returnType = typeExpression();
-    if (returnType == NULL) {
+    if (returnType == nullptr) {
       skipOverDefn();
-      return NULL;
+      return nullptr;
     }
     hasReturnType = true;
   }
@@ -484,17 +484,17 @@ Defn* Parser::methodDef() {
     Node* body = methodBody();
     if (body == &Node::ERROR) {
       skipOverDefn();
-      return NULL;
-    } else if (body != NULL) {
+      return nullptr;
+    } else if (body != nullptr) {
       fn->setBody(body);
     }
     return fn;
   } else if (match(TOKEN_COLON)) {
     // Property
     Node* propType = typeExpression();
-    if (propType == NULL) {
+    if (propType == nullptr) {
       skipOverDefn();
-      return NULL;
+      return nullptr;
     }
 
     ast::Property* prop = new (_arena) ast::Property(loc, name);
@@ -515,7 +515,7 @@ Defn* Parser::methodDef() {
     if (!match(TOKEN_LBRACE)) {
       expected("{");
       skipOverDefn();
-      return NULL;
+      return nullptr;
     }
 
     for (;;) {
@@ -540,12 +540,12 @@ Defn* Parser::methodDef() {
         accessor->setParams(accessorParams.build());
 
         if (name == "get") {
-          if (prop->getter() != NULL) {
+          if (prop->getter() != nullptr) {
             _reporter.error(loc) << "Property 'get' method already defined.";
           }
           prop->setGetter(accessor);
         } else if (name == "set") {
-          if (prop->setter() != NULL) {
+          if (prop->setter() != nullptr) {
             _reporter.error(loc) << "Property 'get' method already defined.";
           }
           prop->setSetter(accessor);
@@ -557,7 +557,7 @@ Defn* Parser::methodDef() {
         if (body == &Node::ERROR) {
           skipOverDefn();
           continue;
-        } else if (body != NULL) {
+        } else if (body != nullptr) {
           accessor->setBody(body);
         }
       }
@@ -567,7 +567,7 @@ Defn* Parser::methodDef() {
   } else {
     _reporter.error(location()) << "return type or function body expected.";
     skipOverDefn();
-    return NULL;
+    return nullptr;
   }
 }
 
@@ -604,12 +604,12 @@ Node* Parser::methodBody() {
     return &Node::ABSENT;
   } else if (_token == TOKEN_LBRACE) {
     Node* body = block();
-    if (body != NULL) {
+    if (body != nullptr) {
       return body;
     }
   } else if (match(TOKEN_FAT_ARROW)) {
     Node* body = exprList();
-    if (body != NULL) {
+    if (body != nullptr) {
       if (!match(TOKEN_SEMI)) {
         expected("';'");
       }
@@ -627,7 +627,7 @@ bool Parser::requirements(ast::NodeListBuilder& out) {
   if (match(TOKEN_WHERE)) {
     for (;;) {
       Node* req = requirement();
-      if (req == NULL) {
+      if (req == nullptr) {
         skipUntil({TOKEN_LBRACE});
         return false;
       }
@@ -644,33 +644,33 @@ Node* Parser::requirement() {
   Location loc = location();
   if (match(TOKEN_INC)) {
     Node* operand = typeExpression();
-    if (operand == NULL) {
-      return NULL;
+    if (operand == nullptr) {
+      return nullptr;
     }
     return new (_arena) ast::UnaryOp(Kind::PRE_INC, loc, operand);
   } else if (match(TOKEN_INC)) {
     Node* operand = typeExpression();
-    if (operand == NULL) {
-      return NULL;
+    if (operand == nullptr) {
+      return nullptr;
     }
     return new (_arena) ast::UnaryOp(Kind::PRE_DEC, loc, operand);
   } else if (match(TOKEN_MINUS)) {
     Node* operand = typeExpression();
-    if (operand == NULL) {
-      return NULL;
+    if (operand == nullptr) {
+      return nullptr;
     }
     return new (_arena) ast::UnaryOp(Kind::NEGATE, loc, operand);
   } else if (match(TOKEN_STATIC)) {
     Node* fn = typeExpression();
-    if (fn == NULL) {
-      return NULL;
+    if (fn == nullptr) {
+      return nullptr;
     }
     return requireCall(Kind::CALL_REQUIRED_STATIC, fn);
   }
 
   Node* rqTerm = typeExpression();
-  if (rqTerm == NULL) {
-    return NULL;
+  if (rqTerm == nullptr) {
+    return nullptr;
   }
   switch (_token) {
     case TOKEN_PLUS:    return requireBinaryOp(Kind::ADD, rqTerm);
@@ -706,7 +706,7 @@ Node* Parser::requirement() {
       if (!match(TOKEN_IN)) {
         _reporter.error(location()) <<
             "'not' must be followed by 'in' when used as a binary operator.";
-        return NULL;
+        return nullptr;
       }
       return requireBinaryOp(Kind::NOT_IN, rqTerm);
     }
@@ -724,8 +724,8 @@ Node* Parser::requirement() {
 Node* Parser::requireBinaryOp(Kind kind, Node* left) {
   next();
   Node* right = typeExpression();
-  if (right == NULL) {
-    return NULL;
+  if (right == nullptr) {
+    return nullptr;
   }
   ast::NodeListBuilder builder(_arena);
   builder.append(left);
@@ -736,8 +736,8 @@ Node* Parser::requireBinaryOp(Kind kind, Node* left) {
 
 Node* Parser::requireCall(Kind kind, Node* fn) {
   Node* fnType = functionType();
-  if (fnType == NULL) {
-    return NULL;
+  if (fnType == nullptr) {
+    return nullptr;
   }
   ast::NodeListBuilder signature(_arena);
   signature.append(fnType);
@@ -761,7 +761,7 @@ bool Parser::paramList(ast::NodeListBuilder& builder) {
 
     for (;;) {
       // Parameter name
-      ast::Parameter* param = NULL;
+      ast::Parameter* param = nullptr;
       if (_token == TOKEN_ID) {
         param = new (_arena) ast::Parameter(location(), copyOf(tokenValue()));
         next();
@@ -800,7 +800,7 @@ bool Parser::paramList(ast::NodeListBuilder& builder) {
           } else {
             paramType = typeExpression();
           }
-          if (paramType == NULL) {
+          if (paramType == nullptr) {
             skipUntil({TOKEN_COMMA, TOKEN_RPAREN});
           } else {
             param->setType(paramType);
@@ -814,7 +814,7 @@ bool Parser::paramList(ast::NodeListBuilder& builder) {
         // Parameter initializer
         if (match(TOKEN_ASSIGN)) {
           Node* init = expression();
-          if (init != NULL) {
+          if (init != nullptr) {
             param->setInit(init);
           }
         }
@@ -858,7 +858,7 @@ Defn* Parser::varOrLetDefn() {
   // Initializer
   if (match(TOKEN_ASSIGN)) {
     Node* init = exprList();
-    if (init != NULL) {
+    if (init != nullptr) {
       var->setInit(init);
     }
   }
@@ -875,8 +875,8 @@ Defn* Parser::varOrLetDefn() {
 ast::ValueDefn* Parser::varDeclList(Kind kind) {
   Location loc = location();
   ast::ValueDefn* var = varDecl(kind);
-  if (var == NULL) {
-    return NULL;
+  if (var == nullptr) {
+    return nullptr;
   }
 
   // Handle multiple variables, i.e. var x, y = ...
@@ -886,8 +886,8 @@ ast::ValueDefn* Parser::varDeclList(Kind kind) {
 
     for (;;) {
       ast::ValueDefn* nextVar = varDecl(kind);
-      if (nextVar == NULL) {
-        return NULL;
+      if (nextVar == nullptr) {
+        return nullptr;
       }
       varList.append(nextVar);
       if (!match(TOKEN_COMMA)) {
@@ -917,7 +917,7 @@ ast::ValueDefn* Parser::varDecl(Kind kind) {
       assert(false && "Implement pre-ellipsis");
     }
     Node* valType = typeExpression();
-    if (valType == NULL) {
+    if (valType == nullptr) {
       skipUntil({TOKEN_SEMI});
       next();
     } else {
@@ -938,15 +938,15 @@ Node* Parser::attribute() {
       skipUntil({
         TOKEN_ATSIGN, TOKEN_CLASS, TOKEN_STRUCT, TOKEN_INTERFACE, TOKEN_ENUM,
         TOKEN_DEF, TOKEN_OVERRIDE, TOKEN_VAR, TOKEN_LET});
-      return NULL;
+      return nullptr;
     }
     Node* attr = dottedIdent();
-    assert(attr != NULL);
+    assert(attr != nullptr);
     if (match(TOKEN_LPAREN)) {
       ast::NodeListBuilder args(_arena);
       Location callLoc = loc;
       if (!callingArgs(args, callLoc)) {
-        return NULL;
+        return nullptr;
       }
       ast::Oper* call = new (_arena) ast::Oper(Kind::CALL, callLoc, args.build());
       call->setOp(attr);
@@ -960,7 +960,7 @@ Node* Parser::attribute() {
   } else if (match(TOKEN_UNSAFE)) {
     return new (_arena) ast::BuiltInAttribute(loc, ast::BuiltInAttribute::UNSAFE);
   } else {
-    return NULL;
+    return nullptr;
   }
 }
 
@@ -975,7 +975,7 @@ void Parser::templateParamList(ast::NodeListBuilder& builder) {
     }
     for (;;) {
       ast::TypeParameter* tp = templateParam();
-      if (tp == NULL) {
+      if (tp == nullptr) {
         skipUntil({TOKEN_RBRACKET});
         return;
       }
@@ -996,7 +996,7 @@ ast::TypeParameter* Parser::templateParam() {
 
     if (match(TOKEN_COLON)) {
       Node* type = typeExpression();
-      if (type == NULL) {
+      if (type == nullptr) {
         skipUntil({TOKEN_RBRACKET, TOKEN_LBRACE});
       } else {
         tp->setType(type);
@@ -1004,7 +1004,7 @@ ast::TypeParameter* Parser::templateParam() {
     } else {
       if (match(TOKEN_TYPE_LE)) {
         Node* super = typeExpression();
-        if (super != NULL) {
+        if (super != nullptr) {
           ast::NodeListBuilder builder(_arena);
           builder.append(super);
           tp->setSubtypeConstraints(builder.build());
@@ -1015,7 +1015,7 @@ ast::TypeParameter* Parser::templateParam() {
 
       if (match(TOKEN_ASSIGN)) {
         Node* init = typeExpression();
-        if (init == NULL) {
+        if (init == nullptr) {
           skipUntil({TOKEN_RBRACKET, TOKEN_LBRACE});
         } else {
           tp->setInit(init);
@@ -1025,7 +1025,7 @@ ast::TypeParameter* Parser::templateParam() {
     return tp;
   } else {
     _reporter.error(location()) << "Type parameter name expected.";
-    return NULL;
+    return nullptr;
   }
 }
 
@@ -1042,8 +1042,8 @@ Node* Parser::typeUnion() {
     builder.append(t);
     while (_token != TOKEN_END) {
       t = typeTerm();
-      if (t == NULL) {
-        return NULL;
+      if (t == nullptr) {
+        return nullptr;
       }
       builder.append(t);
       if (!match(TOKEN_OR)) {
@@ -1072,8 +1072,8 @@ Node* Parser::typePrimary(bool allowPartial) {
         kind = Kind::INHERITED_CONST;
       }
       Node* t = typePrimary(allowPartial);
-      if (t == NULL) {
-        return NULL;
+      if (t == nullptr) {
+        return nullptr;
       }
       return new (_arena) ast::UnaryOp(kind, t->location(), t);
     }
@@ -1089,8 +1089,8 @@ Node* Parser::typePrimary(bool allowPartial) {
       if (!match(TOKEN_RPAREN)) {
         for (;;) {
           Node* m = typeExpression();
-          if (m == NULL) {
-            return NULL;
+          if (m == nullptr) {
+            return nullptr;
           }
           members.append(m);
           loc |= location();
@@ -1132,10 +1132,10 @@ Node* Parser::typePrimary(bool allowPartial) {
         return &Node::ABSENT;
       }
       _reporter.error(location()) << "Type name expected.";
-      return NULL;
+      return nullptr;
     }
   }
-  return NULL;
+  return nullptr;
 }
 
 Node* Parser::functionType() {
@@ -1145,8 +1145,8 @@ Node* Parser::functionType() {
     if (!match(TOKEN_RPAREN)) {
       for (;;) {
         Node* arg = typeExpression();
-        if (arg == NULL) {
-          return NULL;
+        if (arg == nullptr) {
+          return nullptr;
         }
         // TODO: Do we want to support ellipsis here?
         params.append(arg);
@@ -1155,7 +1155,7 @@ Node* Parser::functionType() {
           break;
         } else if (!match(TOKEN_COMMA)) {
           expected("',' or ')'");
-          return NULL;
+          return nullptr;
         }
       }
     }
@@ -1165,8 +1165,8 @@ Node* Parser::functionType() {
       Kind::FUNCTION_TYPE, loc, params.build());
   if (match(TOKEN_RETURNS)) {
     Node* returnType = typeExpression();
-    if (returnType == NULL) {
-      return NULL;
+    if (returnType == nullptr) {
+      return nullptr;
     }
     loc |= returnType->location();
     fnType->setOp(returnType);
@@ -1177,23 +1177,25 @@ Node* Parser::functionType() {
 Node* Parser::specializedTypeName() {
   assert(_token == TOKEN_ID);
   Node* type = id();
+  assert(type != nullptr);
   for (;;) {
-    Location loc = location();
+    Location loc = type->location();
     if (match(TOKEN_LBRACKET)) {
       ast::NodeListBuilder builder(_arena);
       loc = loc | location();
       if (!match(TOKEN_RBRACKET)) {
         for (;;) {
           Node* typeArg = typeExpression();
-          if (typeArg == NULL) {
-            return NULL;
+          if (typeArg == nullptr) {
+            return nullptr;
           }
           builder.append(typeArg);
+          loc = loc | location();
           if (match(TOKEN_RBRACKET)) {
             break;
           } else if (!match(TOKEN_COMMA)) {
             expected("',' or ']'");
-            return NULL;
+            return nullptr;
           }
         }
       }
@@ -1206,7 +1208,7 @@ Node* Parser::specializedTypeName() {
         next();
       } else {
         expected("identifier");
-        return NULL;
+        return nullptr;
       }
     } else {
       return type;
@@ -1242,8 +1244,8 @@ Node* Parser::block() {
         continue;
       }
       Node* st = stmt();
-      if (st == NULL) {
-        return NULL;
+      if (st == nullptr) {
+        return nullptr;
       }
 
       // Semicolon is only required *between* statements, and only for some statement types.
@@ -1257,13 +1259,13 @@ Node* Parser::block() {
     return new (_arena) ast::Oper(Kind::BLOCK, loc, stmts.build());
   }
   assert(false && "Missing opening brace.");
-  return NULL;
+  return nullptr;
 }
 
 Node* Parser::requiredBlock() {
   if (_token != TOKEN_LBRACE) {
     _reporter.error(location()) << "Statement block required.";
-    return NULL;
+    return nullptr;
   }
   return block();
 }
@@ -1314,8 +1316,8 @@ Node* Parser::stmt() {
 
 Node* Parser::assignStmt() {
   Node* left = exprList();
-  if (left == NULL) {
-    return NULL;
+  if (left == nullptr) {
+    return nullptr;
   }
 
   Kind kind = Kind::ABSENT;
@@ -1337,8 +1339,8 @@ Node* Parser::assignStmt() {
 
   next();
   Node* right = exprList();
-  if (right == NULL) {
-    return NULL;
+  if (right == nullptr) {
+    return nullptr;
   }
 
   ast::NodeListBuilder operands(_arena);
@@ -1352,22 +1354,22 @@ Node* Parser::ifStmt() {
   next();
   ast::NodeListBuilder builder(_arena);
   Node* test = expression();
-  if (test == NULL) {
-    return NULL;
+  if (test == nullptr) {
+    return nullptr;
   }
   Node* thenBlk = requiredBlock();
-  if (thenBlk == NULL) {
-    return NULL;
+  if (thenBlk == nullptr) {
+    return nullptr;
   }
   builder.append(thenBlk);
   if (match(TOKEN_ELSE)) {
-    Node* elseBlk = NULL;
+    Node* elseBlk = nullptr;
     if (_token == TOKEN_IF) {
       elseBlk = ifStmt();
     } else {
       elseBlk = requiredBlock();
     }
-    if (elseBlk != NULL) {
+    if (elseBlk != nullptr) {
       builder.append(elseBlk);
     }
   }
@@ -1379,12 +1381,12 @@ Node* Parser::whileStmt() {
   next();
   ast::NodeListBuilder builder(_arena);
   Node* test = expression();
-  if (test == NULL) {
-    return NULL;
+  if (test == nullptr) {
+    return nullptr;
   }
   Node* body = requiredBlock();
-  if (body == NULL) {
-    return NULL;
+  if (body == nullptr) {
+    return nullptr;
   }
   builder.append(body);
   return new (_arena) ast::ControlStmt(Kind::WHILE, test->location(), test, builder.build());
@@ -1395,11 +1397,11 @@ Node* Parser::loopStmt() {
   next();
   ast::NodeListBuilder builder(_arena);
   Node* body = requiredBlock();
-  if (body == NULL) {
-    return NULL;
+  if (body == nullptr) {
+    return nullptr;
   }
   builder.append(body);
-  return new (_arena) ast::ControlStmt(Kind::WHILE, loc, NULL, builder.build());
+  return new (_arena) ast::ControlStmt(Kind::WHILE, loc, nullptr, builder.build());
 }
 
 Node* Parser::forStmt() {
@@ -1419,22 +1421,22 @@ Node* Parser::forStmt() {
     if (match(TOKEN_IN)) {
       // Iterator expression
       Node* iter = expression();
-      if (iter == NULL) {
-        return NULL;
+      if (iter == nullptr) {
+        return nullptr;
       }
       builder.append(iter);
 
       // Loop body
       Node* body = requiredBlock();
-      if (body == NULL) {
-        return NULL;
+      if (body == nullptr) {
+        return nullptr;
       }
       builder.append(body);
-      return new (_arena) ast::ControlStmt(Kind::FOR_IN, loc, NULL, builder.build());
+      return new (_arena) ast::ControlStmt(Kind::FOR_IN, loc, nullptr, builder.build());
     } else  if (match(TOKEN_ASSIGN)) {
       // Initializer
       Node* init = exprList();
-      if (init != NULL) {
+      if (init != nullptr) {
         var->setInit(init);
       }
     }
@@ -1442,54 +1444,54 @@ Node* Parser::forStmt() {
 
   if (!match(TOKEN_SEMI)) {
     expected("';'");
-    return NULL;
+    return nullptr;
   }
 
   if (_token == TOKEN_SEMI) {
     builder.append(&Node::ABSENT);
   } else {
     Node* test = exprList();
-    if (test == NULL) {
-      return NULL;
+    if (test == nullptr) {
+      return nullptr;
     }
     builder.append(test);
   }
 
   if (!match(TOKEN_SEMI)) {
     expected("';'");
-    return NULL;
+    return nullptr;
   }
 
   if (_token == TOKEN_SEMI) {
     builder.append(&Node::ABSENT);
   } else {
     Node* step = assignStmt();
-    if (step == NULL) {
-      return NULL;
+    if (step == nullptr) {
+      return nullptr;
     }
     builder.append(step);
   }
 
   Node* body = requiredBlock();
-  if (body == NULL) {
-    return NULL;
+  if (body == nullptr) {
+    return nullptr;
   }
 
   builder.append(body);
-  return new (_arena) ast::ControlStmt(Kind::FOR, loc, NULL, builder.build());
+  return new (_arena) ast::ControlStmt(Kind::FOR, loc, nullptr, builder.build());
 }
 
 Node* Parser::switchStmt() {
   Location loc = location();
   next();
   Node* test = expression();
-  if (test == NULL) {
-    return NULL;
+  if (test == nullptr) {
+    return nullptr;
   }
   Location braceLoc = location();
   if (!match(TOKEN_LBRACE)) {
     expected("'{'");
-    return NULL;
+    return nullptr;
   }
   ast::NodeListBuilder cases(_arena);
   while (!match(TOKEN_RBRACE)) {
@@ -1509,8 +1511,8 @@ Node* Parser::switchStmt() {
           _reporter.error(braceLoc) << "Incomplete switch.";
         }
         Node* c = caseExpr();
-        if (c == NULL) {
-          return NULL;
+        if (c == nullptr) {
+          return nullptr;
         }
         caseValues.append(c);
         if (!match(TOKEN_COMMA)) {
@@ -1521,13 +1523,13 @@ Node* Parser::switchStmt() {
 
     if (!match(TOKEN_FAT_ARROW)) {
       expected("'=>'");
-      return NULL;
+      return nullptr;
     }
 
     // Case block body
     Node* body = caseBody();
-    if (body == NULL) {
-      return NULL;
+    if (body == nullptr) {
+      return nullptr;
     }
 
     ast::Oper* caseSt = new (_arena) ast::Oper(kind, caseValues.location(), caseValues.build());
@@ -1539,10 +1541,10 @@ Node* Parser::switchStmt() {
 
 Node* Parser::caseExpr() {
   Node* e = primary();
-  if (e != NULL && match(TOKEN_RANGE)) {
+  if (e != nullptr && match(TOKEN_RANGE)) {
     Node* e2 = primary();
-    if (e2 == NULL) {
-      return NULL;
+    if (e2 == nullptr) {
+      return nullptr;
     }
     ast::NodeListBuilder rangeBounds(_arena);
     rangeBounds.append(e);
@@ -1559,9 +1561,9 @@ Node* Parser::caseBody() {
     return block();
   } else {
     body = expression();
-    if (body != NULL && !match(TOKEN_SEMI)) {
+    if (body != nullptr && !match(TOKEN_SEMI)) {
       expected("';'");
-      return NULL;
+      return nullptr;
     }
   }
   return body;
@@ -1571,13 +1573,13 @@ Node* Parser::matchStmt() {
   Location loc = location();
   next();
   Node* test = expression();
-  if (test == NULL) {
-    return NULL;
+  if (test == nullptr) {
+    return nullptr;
   }
   Location braceLoc = location();
   if (!match(TOKEN_LBRACE)) {
     expected("'{'");
-    return NULL;
+    return nullptr;
   }
 
   ast::NodeListBuilder patterns(_arena);
@@ -1598,17 +1600,17 @@ Node* Parser::matchStmt() {
       if (type && type->kind() == Kind::IDENT && match(TOKEN_COLON)) {
         name = type;
         type = typeTerm();
-        if (type == NULL) {
-          return NULL;
+        if (type == nullptr) {
+          return nullptr;
         }
       }
       patternArgs.append(name);
       patternArgs.append(type);
     } else {
       Node* type = typeTerm(false);
-      if (type == NULL) {
+      if (type == nullptr) {
         _reporter.error(location()) << "Match pattern expected.";
-        return NULL;
+        return nullptr;
       }
       patternArgs.append(&Node::ABSENT);
       patternArgs.append(type);
@@ -1616,13 +1618,13 @@ Node* Parser::matchStmt() {
 
     if (!match(TOKEN_FAT_ARROW)) {
       expected("'=>'");
-      return NULL;
+      return nullptr;
     }
 
     // Pattern block body
     Node* body = caseBody();
-    if (body == NULL) {
-      return NULL;
+    if (body == nullptr) {
+      return nullptr;
     }
     patternArgs.append(body);
     ast::Oper* pattern = new (_arena) ast::Oper(kind, patternLoc, patternArgs.build());
@@ -1640,7 +1642,7 @@ Node* Parser::tryStmt() {
 Node* Parser::returnStmt() {
   Location loc = location();
   next();
-  Node* returnVal = NULL;
+  Node* returnVal = nullptr;
   if (_token != TOKEN_SEMI && _token != TOKEN_LBRACE) {
     returnVal = exprList();
   }
@@ -1708,8 +1710,8 @@ Node* Parser::exprList() {
     builder.append(expr);
     while (_token != TOKEN_END) {
       expr = binary();
-      if (expr == NULL) {
-        return NULL;
+      if (expr == nullptr) {
+        return nullptr;
       }
       builder.append(expr);
       if (!match(TOKEN_COMMA)) {
@@ -1723,8 +1725,8 @@ Node* Parser::exprList() {
 
 Node* Parser::binary() {
   Node* e0 = unary();
-  if (e0 == NULL) {
-    return NULL;
+  if (e0 == nullptr) {
+    return nullptr;
   }
 
   OperatorStack opstack(e0, _arena);
@@ -1841,8 +1843,8 @@ Node* Parser::binary() {
         opstack.pushOperator(Kind::AS_TYPE, PREC_IS_AS);
         next();
         Node* t1 = typeExpression();
-        if (t1 == NULL) {
-          return NULL;
+        if (t1 == nullptr) {
+          return nullptr;
         }
         opstack.pushOperand(t1);
         continue;
@@ -1860,8 +1862,8 @@ Node* Parser::binary() {
 
         // Second argument is a type
         Node* t1 = typeExpression();
-        if (t1 == NULL) {
-          return NULL;
+        if (t1 == nullptr) {
+          return nullptr;
         }
         opstack.pushOperand(t1);
         continue;
@@ -1872,8 +1874,8 @@ Node* Parser::binary() {
         opstack.pushOperator(Kind::EXPR_TYPE, PREC_RANGE);
         next();
         Node* t1 = typeExpression();
-        if (t1 == NULL) {
-          return NULL;
+        if (t1 == nullptr) {
+          return nullptr;
         }
         opstack.pushOperand(t1);
         continue;
@@ -1906,8 +1908,8 @@ Node* Parser::binary() {
     }
 
     Node* e1 = unary();
-    if (e1 == NULL) {
-      return NULL;
+    if (e1 == nullptr) {
+      return nullptr;
     }
     opstack.pushOperand(e1);
   }
@@ -1955,35 +1957,35 @@ Node* Parser::unary() {
   Location loc = location();
   if (match(TOKEN_MINUS)) {
     Node* expr = primary();
-    if (expr == NULL) {
-      return NULL;
+    if (expr == nullptr) {
+      return nullptr;
     }
     return new (_arena) ast::UnaryOp(Kind::NEGATE, loc | expr->location(), expr);
   } else if (match(TOKEN_PLUS)) {
     return primary();
   } else if (match(TOKEN_INC)) {
     Node* expr = primary();
-    if (expr == NULL) {
-      return NULL;
+    if (expr == nullptr) {
+      return nullptr;
     }
     return new (_arena) ast::UnaryOp(Kind::PRE_INC, loc | expr->location(), expr);
   } else if (match(TOKEN_DEC)) {
     Node* expr = primary();
-    if (expr == NULL) {
-      return NULL;
+    if (expr == nullptr) {
+      return nullptr;
     }
     return new (_arena) ast::UnaryOp(Kind::PRE_DEC, loc | expr->location(), expr);
   } else if (match(TOKEN_NOT)) {
     Node* expr = primary();
-    if (expr == NULL) {
-      return NULL;
+    if (expr == nullptr) {
+      return nullptr;
     }
     return new (_arena) ast::UnaryOp(Kind::LOGICAL_NOT, loc | expr->location(), expr);
   }
 
   Node* expr = primary();
-  if (expr == NULL) {
-    return NULL;
+  if (expr == nullptr) {
+    return nullptr;
   }
   if (match(TOKEN_INC)) {
     return new (_arena) ast::UnaryOp(Kind::POST_INC, loc | expr->location(), expr);
@@ -2055,8 +2057,8 @@ Node* Parser::primary() {
     case TOKEN_FLOAT32:
     case TOKEN_FLOAT64: {
       Node* e = namedPrimary();
-      if (e == NULL) {
-        return NULL;
+      if (e == nullptr) {
+        return nullptr;
       }
       return primarySuffix(e);
     }
@@ -2070,13 +2072,13 @@ Node* Parser::primary() {
       next();
       if (_token == TOKEN_ID) {
         Node* expr = primary();
-        if (expr == NULL) {
-          return NULL;
+        if (expr == nullptr) {
+          return nullptr;
         }
         return new (_arena) ast::UnaryOp(Kind::SELF_NAME_REF, expr->location(), expr);
       } else {
         expected("identifier");
-        return NULL;
+        return nullptr;
       }
     }
 
@@ -2084,7 +2086,7 @@ Node* Parser::primary() {
       _reporter.error(location()) << "Expression expected, not: " << _token << ".";
       break;
   }
-  return NULL;
+  return nullptr;
 }
 
 Node* Parser::namedPrimary() {
@@ -2133,7 +2135,7 @@ Node* Parser::primarySuffix(Node* expr) {
       ast::NodeListBuilder args(_arena);
       Location callLoc = openLoc;
       if (!callingArgs(args, callLoc)) {
-        return NULL;
+        return nullptr;
       }
       ast::Oper* call = new (_arena) ast::Oper(Kind::CALL, callLoc, args.build());
       call->setOp(expr);
@@ -2145,11 +2147,11 @@ Node* Parser::primarySuffix(Node* expr) {
         for (;;) {
           if (_token == TOKEN_END) {
             _reporter.error(openLoc) << "Unmatched bracket.";
-            return NULL;
+            return nullptr;
           }
           Node* arg = expression();
-          if (arg == NULL) {
-            return NULL;
+          if (arg == nullptr) {
+            return nullptr;
           }
           typeArgs.append(arg);
           fullLoc |= location();
@@ -2157,7 +2159,7 @@ Node* Parser::primarySuffix(Node* expr) {
             break;
           } else if (!match(TOKEN_COMMA)) {
             expected("',' or ']'");
-            return NULL;
+            return nullptr;
           }
         }
       }
@@ -2179,14 +2181,14 @@ bool Parser::callingArgs(ast::NodeListBuilder &args, Location& argsLoc) {
         return false;
       }
       Node* arg = expression();
-      if (arg == NULL) {
+      if (arg == nullptr) {
         return false;
       }
 
       // Keyword argument.
       if (match(TOKEN_ASSIGN)) {
         Node* kwValue = expression();
-        if (kwValue == NULL) {
+        if (kwValue == nullptr) {
           return false;
         }
         ast::NodeListBuilder kwArg(_arena);
@@ -2274,9 +2276,9 @@ Node* Parser::integerLit() {
   bool uns = false;
   int64_t value;
   if (_token == TOKEN_DEC_INT_LIT) {
-    value = strtoll(_lexer.tokenValue().c_str(), NULL, 10);
+    value = strtoll(_lexer.tokenValue().c_str(), nullptr, 10);
   } else {
-    value = strtoll(_lexer.tokenValue().c_str(), NULL, 16);
+    value = strtoll(_lexer.tokenValue().c_str(), nullptr, 16);
   }
   if (_lexer.tokenSuffix().empty()) {
     for (char ch : _lexer.tokenSuffix()) {
@@ -2291,7 +2293,7 @@ Node* Parser::integerLit() {
 
 Node* Parser::floatLit() {
   assert(_token == TOKEN_FLOAT_LIT);
-  double d = strtod(_lexer.tokenValue().c_str(), NULL);
+  double d = strtod(_lexer.tokenValue().c_str(), nullptr);
   Node* node = new (_arena) ast::FloatLiteral(location(), d);
   next();
   return node;
@@ -2364,12 +2366,12 @@ bool Parser::skipOverDefn() {
 #endif
 
 void OperatorStack::pushOperand(Node* operand) {
-  assert(_entries.back().operand == NULL);
+  assert(_entries.back().operand == nullptr);
   _entries.back().operand = operand;
 }
 
 bool OperatorStack::pushOperator(ast::Kind oper, int16_t prec, bool rightAssoc) {
-  assert(_entries.back().operand != NULL);
+  assert(_entries.back().operand != nullptr);
   if (!reduce(prec, rightAssoc)) {
     return false;
   }
@@ -2378,7 +2380,7 @@ bool OperatorStack::pushOperator(ast::Kind oper, int16_t prec, bool rightAssoc) 
   _entries.back().oper = oper;
   _entries.back().precedence = prec;
   _entries.back().rightAssoc = rightAssoc;
-  _entries.back().operand = NULL;
+  _entries.back().operand = nullptr;
   return true;
 }
 
@@ -2388,7 +2390,7 @@ bool OperatorStack::reduce(int16_t precedence, bool rightAssoc) {
     if (back.precedence < precedence) {
       break;
     }
-    assert(back.operand != NULL);
+    assert(back.operand != nullptr);
     _entries.pop_back();
     ast::NodeListBuilder args(_arena);
     args.append(_entries.back().operand);

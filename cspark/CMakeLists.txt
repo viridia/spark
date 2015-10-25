@@ -26,4 +26,5 @@ set_property(TARGET compiler PROPERTY CXX_STANDARD 11)
 
 add_executable(cspark "cspark.cpp")
 target_link_libraries(cspark compiler)
+#target_link_libraries(cspark -lefence)
 set_property(TARGET cspark PROPERTY CXX_STANDARD 11)

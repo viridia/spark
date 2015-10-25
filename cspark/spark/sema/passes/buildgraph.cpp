@@ -14,7 +14,7 @@ namespace sema {
 namespace passes {
 
 void BuildGraphPass::run(semgraph::Module* mod) {
-  assert(mod->ast() != NULL);
+  assert(mod->ast() != nullptr);
   _arena = &mod->sgArena();
   const ast::Module* ast = static_cast<const ast::Module*>(mod->ast());
   assert(ast->kind() == ast::Kind::MODULE);
@@ -144,13 +144,13 @@ semgraph::Defn* BuildGraphPass::createDefn(const ast::Node * node, semgraph::Mem
       const ast::Property* ast = static_cast<const ast::Property*>(node);
       semgraph::Property* prop = new semgraph::Property(ast->location(), ast->name(), parent);
       createParamList(ast->params(), prop, prop->params(), prop->paramScope());
-      if (ast->getter() != NULL) {
+      if (ast->getter() != nullptr) {
         semgraph::Function* getter = new semgraph::Function(
             ast->getter()->location(), ast->getter()->name(), prop);
         getter->setAst(ast->getter());
         prop->setGetter(getter);
       }
-      if (ast->setter() != NULL) {
+      if (ast->setter() != nullptr) {
         semgraph::Function* setter = new semgraph::Function(
             ast->setter()->location(), ast->setter()->name(), prop);
         setter->setAst(ast->setter());
@@ -160,7 +160,7 @@ semgraph::Defn* BuildGraphPass::createDefn(const ast::Node * node, semgraph::Mem
     }
     default:
       reporter().fatal(node->location()) << "Invalid member node type: " << node->kind();
-      return NULL;
+      return nullptr;
   }
 }
 
@@ -217,7 +217,7 @@ semgraph::Visibility BuildGraphPass::astVisibility(const ast::Defn* d) {
 }
 
 support::Arena& BuildGraphPass::arena() {
-  assert(_arena != NULL);
+  assert(_arena != nullptr);
   return *_arena;
 }
 

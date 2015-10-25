@@ -17,11 +17,23 @@
   #include "spark/collections/stringref.h"
 #endif
 
+#ifndef SPARK_COLLECTIONS_HASHING_H
+  #include "spark/collections/hashing.h"
+#endif
+
+#ifndef SPARK_SUPPORT_ARENA_H
+  #include "spark/support/arena.h"
+#endif
+
+#ifndef SPARK_SEMGRAPH_ENV_H
+  #include "spark/semgraph/env.h"
+#endif
+
 namespace spark {
 namespace semgraph {
 using collections::ArrayRef;
 using collections::StringRef;
-class Defn;
+class TypeDefn;
 
 /** Base class for all types. */
 class Type {
@@ -32,7 +44,7 @@ public:
 
     // Nominal types
     VOID,
-    NIL,            // Null pointer type
+    NULLPTR,        // Null pointer type
     BOOLEAN, INTEGER, FLOAT,    // Primitives
     CLASS, STRUCT, INTERFACE, EXTENSION, ENUM,  // Composites
     TYPE_VAR,       // Reference to a template parameter
@@ -43,7 +55,7 @@ public:
     TUPLE,          // Tuple of types
     FUNCTION,       // Function type
     MODIFIED,       // Const or mutable type
-    INSTANTIATED,   // Instantiation of a type
+    SPECIALIZED,    // Instantiation of a type
     VALUE_PARAM,    // A type parameter bound to an immutable value
 
     // Types used internally during compilation
@@ -65,84 +77,31 @@ public:
   /** What kind of type this is. */
   Kind kind() const { return _kind; }
 
+  /** Return true if this type is an error sentinel. */
+  static bool isError(const Type* t) {
+    return t == nullptr || t->kind() == Kind::INVALID;
+  }
+
+  /** Dynamic casting support. */
+  static bool classof(const Type* t) { return true; }
+
   static Type ERROR;
 private:
   const Kind _kind;
 };
 
+/** Array of types. */
 typedef ArrayRef<Type*> TypeArray;
-
-class PrimitiveType : public Type {
-public:
-  PrimitiveType(Kind kind, const StringRef& name, Defn* defn)
-    : Type(kind), _name(name), _defn(defn) {}
-
-  /** Name of this primitive type. */
-  const StringRef& name() const { return _name; }
-
-  /** Type definition for this primitive type. */
-  Defn* defn() { return _defn; }
-  const Defn* defn() const { return _defn; }
-
-private:
-  StringRef _name;
-  Defn* _defn;
-
-//   # Used internally by compiler to store methods for builtin types
-//   memberScope: defn.SymbolScope = 10;
-};
-
-// struct VoidType(PrimitiveType) = TypeKind.VOID {}
-// struct NullType(PrimitiveType) = TypeKind.NULL {}
-// struct BooleanType(PrimitiveType) = TypeKind.BOOLEAN {}
-
-/** An integer type. */
-class IntegerType : public PrimitiveType {
-public:
-  IntegerType(Defn* defn, StringRef name, int32_t bits, bool isUnsigned, bool isPositive)
-    : PrimitiveType(Kind::INTEGER, name, defn)
-  {}
-
-  /** Number of bits in this integer type. */
-  int32_t bits() const { return _bits; }
-
-  /** If true, this is an unsigned integer type. */
-  bool isUnsigned() const { return _unsigned; }
-
-  /** Used in type inference: if true, it means that this is the type of an integer constant
-      whose signed/unsigned state is not known. For example, the number 127 could be either
-      a 8-bit signed number or an 8-bit unsigned number. We represent it as a 7-bit positive
-      number until the exact type can be inferred. */
-  bool isPositive() const { return _positive; }
-
-private:
-  int32_t _bits;
-  bool _unsigned;
-  bool _positive;
-};
-
-/** A floating-point type. */
-class FloatType : public PrimitiveType {
-public:
-  FloatType(Defn* defn, StringRef name, int32_t bits) : PrimitiveType(Kind::FLOAT, name, defn) {}
-
-  /** Number of bits in this floating-point type. */
-  int32_t bits() const { return _bits; }
-
-private:
-  int32_t _bits;
-};
-
-// class TypeVar(Type) = TypeKind.TYPE_VAR {
-//   param: defn.TypeParameter = 1;
-//   index: i32 = 2; # Disambiguate between type params of the same name.
-// }
 
 /** Disjoint type. */
 class UnionType : public Type {
 public:
   UnionType(const TypeArray& members) : Type(Kind::UNION), _members(members) {}
   const TypeArray& members() const { return _members; }
+
+  /** Dynamic casting support. */
+  static bool classof(const UnionType* t) { return true; }
+  static bool classof(const Type* t) { return t->kind() == Kind::UNION; }
 
 private:
   const TypeArray _members;
@@ -153,6 +112,10 @@ class TupleType : public Type {
 public:
   TupleType(const TypeArray& members) : Type(Kind::TUPLE), _members(members) {}
   const TypeArray& members() const { return _members; }
+
+  /** Dynamic casting support. */
+  static bool classof(const TupleType* t) { return true; }
+  static bool classof(const Type* t) { return t->kind() == Kind::TUPLE; }
 
 private:
   const TypeArray _members;
@@ -179,6 +142,11 @@ public:
 
   /** True if this function cannot modify its context. */
   bool isConstSelf() const { return _constSelf; }
+
+  /** Dynamic casting support. */
+  static bool classof(const FunctionType* t) { return true; }
+  static bool classof(const Type* t) { return t->kind() == Kind::FUNCTION; }
+
 private:
   Type* _returnType;
   TypeArray _paramTypes;
@@ -207,13 +175,14 @@ private:
 // #  ref : bool = 5;
 // };
 
+/** Nominal user-defined types such as classes, structs, interfaces and enumerations. */
 class Composite : public Type {
 public:
-  Composite(Kind kind) : Type(kind), _defn(NULL), _superType(NULL) {}
+  Composite(Kind kind) : Type(kind), _defn(nullptr), _superType(nullptr) {}
 
   /** Definition for this type. */
-  Defn* defn() const { return _defn; }
-  void setDefn(Defn* defn) { _defn = defn; }
+  TypeDefn* defn() const { return _defn; }
+  void setDefn(TypeDefn* defn) { _defn = defn; }
 
   /** Primary base type. */
   Type* superType() const { return _superType; }
@@ -223,9 +192,12 @@ public:
   const TypeArray& interfaces() const { return _interfaces; }
   void setInterfaces(const TypeArray& ifaces) { _interfaces = ifaces; }
 
+  /** Dynamic casting support. */
+  static bool classof(const Composite* t) { return true; }
+  static bool classof(const Type* t) { return t->kind() >= Kind::CLASS && t->kind() <= Kind::ENUM; }
+
 private:
-  Defn* _defn;
-  //bases : list[ast.Node] = 2;   # List of base types
+  TypeDefn* _defn;
   Type* _superType;
   TypeArray _interfaces;
 
@@ -255,6 +227,83 @@ private:
 //   methodsByIndex : map[i32, defn.Function] = 10;
 };
 
+/** A specialization of a generic type. */
+class SpecializedType : public Type {
+public:
+  SpecializedType(Type* generic, const Env& env)
+    : Type(Kind::SPECIALIZED)
+    , _generic(generic)
+    , _env(env)
+  {}
+
+  /** The generic version of this specialized type. */
+  Type* generic() const { return _generic; }
+  void setGeneric(Type* t) { _generic = t; }
+
+  /** The set of variable bindings for the generic type. */
+  Env& env() { return _env; }
+  const Env& env() const { return _env; }
+
+  /** Dynamic casting support. */
+  static bool classof(const SpecializedType* t) { return true; }
+  static bool classof(const Type* t) { return t->kind() == Kind::SPECIALIZED; }
+
+private:
+  Type* _generic;
+  Env _env;
+};
+
+/** A tuple of types that can be used as a lookup key. */
+class TypeKey {
+public:
+  TypeKey() {}
+  TypeKey(const TypeArray& members) : _members(members) {}
+  TypeKey(const TypeKey& key) : _members(key._members) {}
+
+  /** Assignment operator. */
+  TypeKey& operator=(const TypeKey& key) { _members = key._members; return *this; }
+
+  /** Equality comparison. */
+  friend bool operator==(const TypeKey& lhs, const TypeKey& rhs) {
+    return lhs._members == rhs._members;
+  }
+
+  /** Inequality comparison. */
+  friend bool operator!=(const TypeKey& lhs, const TypeKey& rhs) {
+    return lhs._members != rhs._members;
+  }
+
+  /** Iteration. */
+  TypeArray::const_iterator begin() const { return _members.begin(); }
+  TypeArray::const_iterator end() const { return _members.end(); }
+
+  /** Return the length of the key. */
+  size_t size() const { return _members.size(); }
+
+  /** Read-only random access. */
+  Type* operator[](int index) const {
+    return _members[index];
+  }
+
+private:
+  TypeArray _members;
+};
+
 }}
+
+namespace std {
+/** Compute a hash for a TypeKey. */
+template<>
+struct hash<spark::semgraph::TypeKey> {
+  inline std::size_t operator()(const spark::semgraph::TypeKey& value) const {
+    std::size_t seed = 0;
+    for (spark::semgraph::Type* member : value) {
+      hash_combine(seed, std::hash<spark::semgraph::Type*>()(member));
+    }
+    return seed;
+  }
+};
+
+}
 
 #endif
