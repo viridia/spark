@@ -9,7 +9,7 @@
   #include "spark/ast/node.h"
 #endif
 
-#ifndef SPARK_COMMON_STRINGREF_H
+#ifndef SPARK_COLLECTIONS_STRINGREF_H
   #include "spark/collections/stringref.h"
 #endif
 

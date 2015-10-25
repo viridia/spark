@@ -2,11 +2,11 @@
 // doccoment.h: Doc comments.
 // ============================================================================
 
-#ifndef SPARK_COMMON_DOCCOMMENT_H
-#define SPARK_COMMON_DOCCOMMENT_H 1
+#ifndef SPARK_SOURCE_DOCCOMMENT_H
+#define SPARK_SOURCE_DOCCOMMENT_H 1
 
 #ifndef SPARK_COLLECTIONS_STRINGREF_H
-#include <spark/collections/stringref.h>
+  #include "spark/collections/stringref.h"
 #endif
 
 namespace spark {

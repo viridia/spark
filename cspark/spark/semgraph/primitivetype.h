@@ -3,7 +3,7 @@
 // ============================================================================
 
 #ifndef SPARK_SEMGRAPH_PRIMITIVETYPE_H
-#define SPARK_SEMGRAPH_PRIMITIVETYPE_H
+#define SPARK_SEMGRAPH_PRIMITIVETYPE_H 1
 
 #ifndef SPARK_CONFIG_H
   #include "spark/config.h"

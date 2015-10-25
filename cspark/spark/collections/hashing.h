@@ -22,7 +22,7 @@
 #endif
 
 #ifndef SPARK_COLLECTIONS_STRINGREF_H
-  #include "spark/collections/stringref"
+  #include "spark/collections/stringref.h"
 #endif
 
 namespace std {

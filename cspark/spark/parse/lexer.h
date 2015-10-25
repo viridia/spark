@@ -6,27 +6,27 @@
 #define SPARK_PARSE_LEXER_H 1
 
 #ifndef SPARK_AST_NODE_H
-  #include <spark/ast/node.h>
+  #include "spark/ast/node.h"
 #endif
 
 #ifndef SPARK_COLLECTIONS_STRINGREF_H
-  #include <spark/collections/stringref.h>
+  #include "spark/collections/stringref.h"
 #endif
 
 #ifndef SPARK_SOURCE_PROGRAMSOURCE_H
-  #include <spark/source/programsource.h>
+  #include "spark/source/programsource.h"
 #endif
 
-#ifndef SPARK_SOURCE_DOCCOMMMENT_H
-  #include <spark/source/doccomment.h>
+#ifndef SPARK_SOURCE_DOCCOMMENT_H
+  #include "spark/source/doccomment.h"
 #endif
 
 #ifndef SPARK_SOURCE_LOCATION_H
-  #include <spark/source/location.h>
+  #include "spark/source/location.h"
 #endif
 
 #ifndef SPARK_PARSE_TOKENS_H
-  #include <spark/parse/tokens.h>
+  #include "spark/parse/tokens.h"
 #endif
 
 #if SPARK_HAVE_ISTREAM

@@ -5,7 +5,7 @@
 #ifndef SPARK_SEMGRAPH_DEFNVISITOR_H
 #define SPARK_SEMGRAPH_DEFNVISITOR_H 1
 
-#ifndef SPARK_SEMGRAPH_DENF_H
+#ifndef SPARK_SEMGRAPH_DEFN_H
   #include "spark/semgraph/defn.h"
 #endif
 

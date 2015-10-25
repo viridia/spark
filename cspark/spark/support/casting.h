@@ -7,7 +7,10 @@
 
 #ifndef SPARK_CONFIG_H
   #include "spark/config.h"
-#include <../lib/spark/collections/array.sp>
+#endif
+
+#if SPARK_HAVE____LIB_SPARK_COLLECTIONS_ARRAY_SP
+  #include <../lib/spark/collections/array.sp>
 #endif
 
 #if SPARK_HAVE_CASSERT

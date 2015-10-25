@@ -3,7 +3,7 @@
  * ================================================================== */
 
 #ifndef SPARK_COLLECTIONS_ARRAYREF_H
-#define SPARK_COLLECTIONS_ARRAYREF_H
+#define SPARK_COLLECTIONS_ARRAYREF_H 1
 
 #if SPARK_HAVE_STDDEF_H
   #include <stddef.h>

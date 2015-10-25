@@ -5,7 +5,9 @@
 #ifndef SPARK_AST_BUILDER_H
 #define SPARK_AST_BUILDER_H 1
 
-#include "spark/config.h"
+#ifndef SPARK_CONFIG_H
+  #include "spark/config.h"
+#endif
 
 #ifndef SPARK_AST_NODE_H
   #include "spark/ast/node.h"

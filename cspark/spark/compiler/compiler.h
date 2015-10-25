@@ -5,7 +5,9 @@
 #ifndef SPARK_COMPILER_COMPILER_H
 #define SPARK_COMPILER_COMPILER_H 1
 
-#include <spark/config.h>
+#ifndef SPARK_CONFIG_H
+  #include "spark/config.h"
+#endif
 
 #ifndef SPARK_COLLECTIONS_STRINGREF_H
   #include "spark/collections/stringref.h"

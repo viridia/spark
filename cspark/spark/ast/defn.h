@@ -6,11 +6,11 @@
 #define SPARK_AST_DEFN_H 1
 
 #ifndef SPARK_AST_NODE_H
-#include "spark/ast/node.h"
+  #include "spark/ast/node.h"
 #endif
 
 #ifndef SPARK_COLLECTIONS_STRINGREF_H
-#include "spark/collections/stringref.h"
+  #include "spark/collections/stringref.h"
 #endif
 
 namespace spark {

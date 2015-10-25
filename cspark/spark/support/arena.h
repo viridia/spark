@@ -6,11 +6,11 @@
 #define SPARK_SUPPORT_ARENA_H 1
 
 #ifndef SPARK_COLLECTIONS_STRINGREF_H
-  #include <spark/collections/stringref.h>
+  #include "spark/collections/stringref.h"
 #endif
 
 #ifndef SPARK_COLLECTIONS_ARRAYREF_H
-  #include <spark/collections/arrayref.h>
+  #include "spark/collections/arrayref.h"
 #endif
 
 #if SPARK_HAVE_NEW

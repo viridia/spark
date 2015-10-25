@@ -6,7 +6,7 @@
 #define SPARK_AST_OPER_H 1
 
 #ifndef SPARK_AST_NODE_H
-#include <spark/ast/node.h>
+  #include "spark/ast/node.h"
 #endif
 
 namespace spark {

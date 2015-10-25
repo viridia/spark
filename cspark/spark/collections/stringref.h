@@ -5,7 +5,9 @@
 #ifndef SPARK_COLLECTIONS_STRINGREF_H
 #define SPARK_COLLECTIONS_STRINGREF_H 1
 
-#include <spark/config.h>
+#ifndef SPARK_CONFIG_H
+  #include "spark/config.h"
+#endif
 
 #if SPARK_HAVE_STDDEF_H
   #include <stddef.h>

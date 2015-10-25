@@ -5,10 +5,12 @@
 #ifndef SPARK_SOURCE_LOCATION_H
 #define SPARK_SOURCE_LOCATION_H 1
 
-#include <spark/config.h>
+#ifndef SPARK_CONFIG_H
+  #include "spark/config.h"
+#endif
 
 #if SPARK_HAVE_ALGORITHM
-#include <algorithm>
+  #include <algorithm>
 #endif
 
 namespace spark {

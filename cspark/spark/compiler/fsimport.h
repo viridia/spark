@@ -2,8 +2,8 @@
 // compiler/rootscope.h: Top-level scope.
 // ============================================================================
 
-#ifndef SPARK_COMPILER_FSIMPORTER_H
-#define SPARK_COMPILER_FSIMPORTER_H 1
+#ifndef SPARK_COMPILER_FSIMPORT_H
+#define SPARK_COMPILER_FSIMPORT_H 1
 
 #ifndef SPARK_SCOPE_MODULEPATHSCOPE_H
   #include "spark/scope/modulepathscope.h"

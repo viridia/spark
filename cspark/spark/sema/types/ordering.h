@@ -2,8 +2,8 @@
 // sema/types/ordering.h: Class for creating and managing derived types.
 // ============================================================================
 
-#ifndef SPARK_SEMA_TYPESTORE_H
-#define SPARK_SEMA_TYPESTORE_H 1
+#ifndef SPARK_SEMA_TYPES_ORDERING_H
+#define SPARK_SEMA_TYPES_ORDERING_H 1
 
 #ifndef SPARK_SEMGRAPH_EXPR_H
   #include "spark/semgraph/expr.h"

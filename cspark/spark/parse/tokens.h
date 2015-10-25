@@ -9,6 +9,10 @@
   #include <ostream>
 #endif
 
+#if SPARK_HAVE_TOKENS_TXT
+  #include <tokens.txt>
+#endif
+
 namespace spark {
 namespace parse {
 

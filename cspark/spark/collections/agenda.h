@@ -5,7 +5,7 @@
 #ifndef SPARK_COLLECTIONS_AGENDA_H
 #define SPARK_COLLECTIONS_AGENDA_H 1
 
-#if SPARK_CONFIG_H
+#ifndef SPARK_CONFIG_H
   #include "spark/config.h"
 #endif
 

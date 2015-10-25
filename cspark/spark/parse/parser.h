@@ -5,7 +5,9 @@
 #ifndef SPARK_PARSE_PARSER_H
 #define SPARK_PARSE_PARSER_H 1
 
-#include "spark/config.h"
+#ifndef SPARK_CONFIG_H
+  #include "spark/config.h"
+#endif
 
 #ifndef SPARK_PARSE_LEXER_H
   #include "spark/parse/lexer.h"

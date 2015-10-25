@@ -13,7 +13,7 @@
   #include "spark/sema/passes/passid.h"
 #endif
 
-#ifndef SPARK_SEMGRAPH_DENF_H
+#ifndef SPARK_SEMGRAPH_DEFN_H
   #include "spark/semgraph/defn.h"
 #endif
 

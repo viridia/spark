@@ -6,7 +6,7 @@
 #define SPARK_SOURCE_PROGRAMSOURCE_H 1
 
 #ifndef SPARK_CONFIG_H
-  #include <spark/config.h>
+  #include "spark/config.h"
 #endif
 
 #if SPARK_HAVE_ISTREAM
@@ -26,11 +26,11 @@
 #endif
 
 #ifndef SPARK_COLLECTIONS_STRINGREF_H
-  #include <spark/collections/stringref.h>
+  #include "spark/collections/stringref.h"
 #endif
 
 #ifndef SPARK_SUPPORT_PATH_H
-  #include <spark/support/path.h>
+  #include "spark/support/path.h"
 #endif
 
 namespace spark {
