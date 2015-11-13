@@ -1,3 +1,4 @@
+#include "spark/collections/smallset.h"
 #include "spark/scope/inheritedscope.h"
 #include "spark/semgraph/defn.h"
 
@@ -7,6 +8,7 @@
 
 namespace spark {
 namespace scope {
+using spark::collections::SmallSet;
 using spark::collections::StringRef;
 
 void InheritedScope::addMember(Member* m) {

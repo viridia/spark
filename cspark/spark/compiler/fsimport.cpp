@@ -46,7 +46,6 @@ DirectoryScope::DirectoryScope(const Path& path, semgraph::Package* parent, Cont
       }
     }
   }
-  (void)_parent;
 
   // Cache the directory listing. We need this for case-insensitive file systems.
   auto iter = _path.iterate();
@@ -183,7 +182,7 @@ FileSystemImporter::~FileSystemImporter() {
 
 void FileSystemImporter::addPath(const Path& path) {
   auto package = new semgraph::Package(path.name(), nullptr);
-  package->setMemberScope(new DirectoryScope(path, package, _context));
+  package->setMemberScope(new DirectoryScope(path, nullptr, _context));
   package->path() = path;
   _roots.push_back(package);
 }

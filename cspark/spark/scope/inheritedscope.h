@@ -12,6 +12,7 @@
 namespace spark {
 namespace scope {
 using collections::StringRef;
+using collections::SmallSetBase;
 using semgraph::Member;
 
 /** InheritedScope handles name lookups for class instance variables, where a name may be found

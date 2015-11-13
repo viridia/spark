@@ -1,5 +1,5 @@
 // ============================================================================
-// scopecreation.h:
+// nameresolution.h:
 // ============================================================================
 
 #ifndef SPARK_SEMA_PASSES_NAMERESOLUTION_H
@@ -65,14 +65,29 @@ public:
 private:
   void resolveImports(semgraph::Module* mod);
   void resolveClassBases(semgraph::Composite* cls);
+  void resolveClassBasesOutOfBand(semgraph::Composite* cls);
+  void processParamList(
+      semgraph::Defn* d,
+      const collections::ArrayRef<semgraph::Parameter*>& paramList);
+  void processSelfParam(semgraph::Defn* d, semgraph::Parameter* selfParam);
+  void processClassParam(semgraph::Defn* d, semgraph::Parameter* selfParam);
+  void processAttributes(semgraph::Defn* d);
+  void processRequirements(
+    semgraph::Defn* d,
+    const ast::NodeList& astReqs,
+    std::vector<semgraph::RequiredFunction*>& requiredFunctions);
+  semgraph::Expr* resolveExpr(const ast::Node* ast);
   semgraph::Type* resolveType(const ast::Node* ast);
   void findAbsoluteSymbol(const ast::Node* node, std::vector<semgraph::Member*> &result);
   semgraph::Package* findPackage(const collections::StringRef& qname);
+  void pushAncestorScopes(semgraph::Member* m);
+  scope::SymbolScope* createScope(semgraph::Type* t);
 
   support::Arena* _arena;
-  support::Arena _tempArena;
   sema::names::Subject _subject;
+  std::auto_ptr<scope::ScopeStack> _globalScopes;
   std::auto_ptr<scope::ScopeStack> _scopeStack;
+  semgraph::Type* _selfType;
 
   support::Arena& arena();
 };

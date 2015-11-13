@@ -5,17 +5,15 @@
 #ifndef SPARK_SEMA_NAMES_FILLMEMBERSET_H
 #define SPARK_SEMA_NAMES_FILLMEMBERSET_H 1
 
-#ifndef SPARK_CONFIG_H
-  #include "spark/config.h"
+#ifndef SPARK_SEMA_COLLECTIONS_ARRAYREF_H
+  #include "spark/collections/arrayref.h"
 #endif
 
-#if SPARK_HAVE_VECTOR
-  #include <vector>
-#endif
+#include "spark/semgraph/expr.h"
 
 namespace spark {
 namespace error { class Reporter; }
-namespace semgraph { class Member; class MemberSet; }
+namespace semgraph { class Member; }
 namespace support { class Arena; }
 namespace sema {
 namespace names {
@@ -35,7 +33,8 @@ public:
 
   /** Populate this member set with members, and infer the genus of the set. Also reporter
       an error if the members are ambiguous or not visible. */
-  bool fill(MemberSet* mset, std::vector<Member*> members);
+  bool fill(MemberSet* mset, collections::ArrayRef<Member*> members);
+  static MemberSet::Genus genusOf(collections::ArrayRef<Member*> members);
 
 private:
   Reporter& _reporter;

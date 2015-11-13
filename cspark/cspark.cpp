@@ -7,6 +7,8 @@
 #include <iostream>
 #include <vector>
 
+//#include "mcheck.h"
+
 using spark::collections::StringRef;
 using spark::compiler::Compiler;
 
@@ -125,6 +127,7 @@ private:
 };
 
 int main(int argc, char **argv) {
+//  ::mtrace();
   App app(argc, argv);
   app.parseArgs();
   return app.run();

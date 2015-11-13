@@ -1,7 +1,3 @@
-// ============================================================================
-// reporter.cpp: Error reporter.
-// ============================================================================
-
 #include "spark/error/reporter.h"
 #include "spark/source/programsource.h"
 

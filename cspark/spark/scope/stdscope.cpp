@@ -6,6 +6,7 @@ namespace scope {
 using spark::collections::StringRef;
 
 void StandardScope::addMember(semgraph::Member* m) {
+  assert(m->kind() >= Member::Kind::TYPE && m->kind() <= Member::Kind::TUPLE_MEMBER);
   _entries[m->name()].push_back(m);
 }
 
@@ -33,6 +34,14 @@ void StandardScope::describe(std::ostream& strm) const {
     strm << _description << " scope";
   } else {
     strm << "scope containing " << _entries.size() << " members";
+  }
+}
+
+void StandardScope::validate() const {
+  for (EntryMap::value_type v : _entries) {
+    for (auto m : v.second) {
+      assert(m->kind() >= Member::Kind::TYPE && m->kind() <= Member::Kind::TUPLE_MEMBER);
+    }
   }
 }
 

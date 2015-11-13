@@ -17,6 +17,10 @@
   #include <new>
 #endif
 
+#if SPARK_HAVE_VECTOR
+  #include <vector>
+#endif
+
 namespace spark {
 namespace support {
 
@@ -39,15 +43,19 @@ public:
     , _end(nullptr)
     , _blockSize(blockSize)
   {}
+  Arena(const Arena&) = delete;
 
   ~Arena() {
     clear();
   }
 
+  Arena& operator=(const Arena& a) = delete;
+
   /** Allocate a block of at least size `size`. */
   value_type* allocate(std::size_t n) {
     n = (n + 7) & ~7; // Round up to nearest 8.
     size_t freeSpace = _end - _pos;
+    assert(freeSpace < _blockSize);
     if (freeSpace < n) {
       // TODO: In cases where the new block will be fuller than the previous block, we could
       // play games with keeping the previous block at the head of the list.
@@ -60,6 +68,8 @@ public:
     }
     uint8_t* result = _pos;
     _pos += n;
+    assert(_pos <= _end);
+    assert((_end - _pos) < _blockSize);
     return result;
   }
 
@@ -71,12 +81,15 @@ public:
     while (_head) {
       Block* blk = _head;
       _head = _head->_next;
-      delete reinterpret_cast<uint8_t*>(blk);
+      delete [] reinterpret_cast<uint8_t*>(blk);
     }
+    _pos = nullptr;
+    _end = nullptr;
   }
 
   /** Make a long-lived copy of this StringRef. */
   collections::StringRef copyOf(const collections::StringRef& str) {
+    assert(str.size() < 0x100000);
     value_type* data = allocate(str.size());
     std::copy(str.begin(), str.end(), data);
     return collections::StringRef((char*) data, str.size());
@@ -89,15 +102,21 @@ public:
     std::copy(array.begin(), array.end(), data);
     return collections::ArrayRef<T>((T*) data, array.size());
   }
+
+  /** Make a long-lived copy of this vector. */
+  template<class T>
+  collections::ArrayRef<T> copyOf(const std::vector<T>& array) {
+    return copyOf(collections::ArrayRef<T>(array));
+  }
+
+//   void validate() {
+//     assert(_pos <= _end);
+//   }
 private:
   Block* _head;
   value_type *_pos;
   value_type *_end;
   size_t _blockSize;
-
-  // Hide copy constructor
-  Arena(const Arena& a);
-  Arena& operator=(const Arena& a);
 };
 
 /** Allocator compatible with C++ std containers. */

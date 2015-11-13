@@ -59,12 +59,24 @@ public:
   }
 
   virtual ReturnType visitDefn(Defn* d, Args&&... args) { return ReturnType(); }
-  virtual ReturnType visitValueDefn(ValueDefn* v, Args&&... args) { return visitDefn(v); }
-  virtual ReturnType visitTypeDefn(TypeDefn* t, Args&&... args) { return visitDefn(t); }
-  virtual ReturnType visitTypeParameter(TypeParameter* f, Args&&... args) { return visitDefn(f); }
-  virtual ReturnType visitParameter(Parameter* f, Args&&... args) { return visitDefn(f); }
-  virtual ReturnType visitFunction(Function* f, Args&&... args) { return visitDefn(f); }
-  virtual ReturnType visitProperty(Property* p, Args&&... args) { return visitDefn(p); }
+  virtual ReturnType visitValueDefn(ValueDefn* v, Args&&... args) {
+    return visitDefn(v, std::forward<Args>(args)...);
+  }
+  virtual ReturnType visitTypeDefn(TypeDefn* t, Args&&... args) {
+    return visitDefn(t, std::forward<Args>(args)...);
+  }
+  virtual ReturnType visitTypeParameter(TypeParameter* f, Args&&... args) {
+    return visitDefn(f, std::forward<Args>(args)...);
+  }
+  virtual ReturnType visitParameter(Parameter* f, Args&&... args) {
+    return visitDefn(f, std::forward<Args>(args)...);
+  }
+  virtual ReturnType visitFunction(Function* f, Args&&... args) {
+    return visitDefn(f, std::forward<Args>(args)...);
+  }
+  virtual ReturnType visitProperty(Property* p, Args&&... args) {
+    return visitDefn(p, std::forward<Args>(args)...);
+  }
 };
 
 }}

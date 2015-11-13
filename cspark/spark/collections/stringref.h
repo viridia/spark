@@ -46,16 +46,24 @@ public:
 
   /** Construct a StringRef from a C string. */
   template <size_t Size>
-  StringRef(const char (&array)[Size]) : _data(array), _size(Size - 1) {}
+  StringRef(const char (&array)[Size]) : _data(array), _size(Size - 1) {
+    assert(_size < 0x100000);
+  }
 
   /** Construct a StringRef from a null-terminated C string. */
-  StringRef(const char* str) : _data(str), _size(std::strlen(str)) {}
+  StringRef(const char* str) : _data(str), _size(std::strlen(str)) {
+    assert(_size < 0x100000);
+  }
 
   /** Construct a StringRef from an STL string. */
-  StringRef(const std::string& str) : _data(str.data()), _size(str.size()) {}
+  StringRef(const std::string& str) : _data(str.data()), _size(str.size()) {
+    assert(_size < 0x100000);
+  }
 
   /** Construct a StringRef from a character array with explicit size. */
-  StringRef(const char* str, size_t size) : _data(str), _size(size) {}
+  StringRef(const char* str, size_t size) : _data(str), _size(size) {
+    assert(_size < 0x100000);
+  }
 
   /** Return the size of the string in bytes. */
   size_t size() const { return _size; }
@@ -114,6 +122,21 @@ public:
       }
     }
     return -1;
+  }
+
+  /** Compare two strings, in byte value order. */
+  int compare(const StringRef& other) {
+    for (int i = 0; i < _size; ++i) {
+      if (i < other._size) {
+        if (_data[i] != other._data[i]) {
+          return _data[i] < other._data[i] ? -1 : 1;
+        }
+      } else {
+        // Other is a proper prefix of this string.
+        return 1;
+      }
+    }
+    return _size < other._size ? -1 : 0;
   }
 
   /** Read-only random access. */

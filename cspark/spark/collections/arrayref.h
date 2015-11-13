@@ -5,6 +5,10 @@
 #ifndef SPARK_COLLECTIONS_ARRAYREF_H
 #define SPARK_COLLECTIONS_ARRAYREF_H 1
 
+#ifndef SPARK_CONFIG_H
+  #include "spark/config.h"
+#endif
+
 #if SPARK_HAVE_STDDEF_H
   #include <stddef.h>
 #endif
@@ -48,6 +52,9 @@ public:
 
   /** Construct an ArrayRef from a vector. */
   ArrayRef(const std::vector<T>& v) : _data(v.data()), _size(v.size()) {}
+
+  /** Construct an ArrayRef from an initializer list. */
+  ArrayRef(std::initializer_list<T> il) : _data(il.begin()), _size(il.size()) {}
 
   /// Construct an ArrayRef from a C array.
   template <size_t Size> ArrayRef(const T (&array)[Size]) : _data(array), _size(Size) {}

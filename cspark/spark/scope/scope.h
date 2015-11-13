@@ -13,6 +13,10 @@
   #include "spark/collections/stringref.h"
 #endif
 
+#ifndef SPARK_COLLECTIONS_SMALLSET_H
+  #include "spark/collections/smallset.h"
+#endif
+
 #if SPARK_HAVE_OSTREAM
   #include <ostream>
 #endif
@@ -27,6 +31,7 @@ class Member;
 }
 namespace scope {
 using collections::StringRef;
+using collections::SmallSetBase;
 using semgraph::Member;
 
 /** A function that takes a symbol name. */
@@ -40,6 +45,7 @@ public:
   enum ScopeType {
     DEFAULT,        // Scope representing static members of some definition or module.
     INSTANCE,       // Scope representing instance variables of some type.
+    INTERCEPT,      // Scope used to intercept qualified name lookups for required methods.
     LOCAL           // Local scope such as a block.
   };
 
@@ -66,6 +72,9 @@ public:
 
   /** Produce a description of this scope. */
   virtual void describe(std::ostream& strm) const = 0;
+
+  /** Make sure this scope is working properly. */
+  virtual void validate() const {}
 };
 
 }}

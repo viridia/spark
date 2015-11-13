@@ -49,6 +49,7 @@ public:
   void lookupName(const StringRef& name, std::vector<Member*> &result) const;
   void forAllNames(NameFunctor& nameFn) const;
   void describe(std::ostream& strm) const;
+  void validate() const final;
 protected:
   typedef std::unordered_map<StringRef, std::vector<Member*>> EntryMap;
 

@@ -1,5 +1,7 @@
 #include "spark/sema/names/subject.h"
 #include "spark/semgraph/defn.h"
+#include "spark/semgraph/type.h"
+#include "spark/support/casting.h"
 
 #if SPARK_HAVE_CASSERT
   #include <cassert>
@@ -9,6 +11,7 @@ namespace spark {
 namespace sema {
 namespace names {
 using namespace semgraph;
+using support::dyn_cast;
 
 bool Subject::isVisible(Member* target) {
   while (target->kind() == Member::Kind::SPECIALIZED) {
@@ -33,20 +36,22 @@ bool Subject::isVisible(Member* target) {
     return true;
   }
 
-#if 0
-  if (target->visibility() == PROTECTED) {
-    // Do base type test
-    if isinstance(targetScope, graph.TypeDefn) and
-          isinstance(targetScope.getType(), graph.Composite):
-        targetCls = targetScope.getType()
-        for subjectAncestor in defns.ancestorDefs(self.subject):
-          if isinstance(subjectAncestor, graph.TypeDefn) and
-              isinstance(subjectAncestor.getType(), graph.Composite):
-            subjectCls = subjectAncestor.getType()
-            if types.isSubtype(subjectCls, targetCls):
-              return True
+  if (targetDefn->visibility() == semgraph::PROTECTED) {
+    if (auto td = dyn_cast<TypeDefn*>(targetScope)) {
+      if (auto classDefiningTarget = dyn_cast<Composite*>(td->type())) {
+        for (Member* sym = _value; sym != nullptr; sym = sym->definedIn()) {
+          if (auto tds = dyn_cast<TypeDefn*>(sym)) {
+            if (auto classContainingSubject = dyn_cast<Composite*>(tds->type())) {
+              if (classContainingSubject->inheritsFrom(classDefiningTarget)) {
+                return true;
+              }
+            }
+          }
+        }
+      }
+    }
   }
-
+#if 0
   // Check friend declarations
   for friend in targetScope.getFriends():
     if self.contains(self.subject, friend):

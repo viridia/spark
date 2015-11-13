@@ -37,6 +37,8 @@
   #include <memory>
 #endif
 
+#include <unordered_map>
+
 namespace spark {
 namespace ast {
 class Node;
@@ -45,11 +47,13 @@ namespace semgraph {
 using collections::ArrayRef;
 using collections::StringRef;
 
+class Defn;
 class Expr;
 class FunctionType;
 class Type;
 class TypeParameter;
-class TypeVariable;
+class TypeVar;
+class RequiredFunction;
 
 typedef ArrayRef<Type*> TypeArray;
 
@@ -104,6 +108,9 @@ public:
   /** Return the definition enclosing this one. */
   Member* definedIn() const { return _definedIn; }
 
+  /** Downcast to a definition. */
+  virtual Defn* asDefn() { return nullptr; }
+
   /** Produce a string representation of this member (for unit tests). */
   virtual void format(std::ostream& out) const = 0;
 
@@ -113,6 +120,7 @@ public:
     qualifiedName(result);
     return result;
   }
+
   void qualifiedName(std::string& result) const {
     if (_definedIn) {
       _definedIn->qualifiedName(result);
@@ -121,9 +129,10 @@ public:
     result.insert(result.end(), _name.begin(), _name.end());
   }
 
+  /** Dynamic casting support. */
+  static bool classof(const Member* m) { return true; }
+
 protected:
-
-
   const Kind _kind;
   const std::string _name;
   Member* _definedIn;
@@ -176,9 +185,15 @@ public:
   bool isAbstract() const { return _abstract; }
   void setAbstract(bool value) { _abstract = value; }
 
+  /** The list of attributes on this definition. */
+  std::vector<Expr*> attributes() { return _attributes; }
+  const std::vector<Expr*> attributes() const { return _attributes; }
+
   // If non-zero, means this is the Nth member with the same name.
   int32_t overloadIndex() const { return _overloadIndex; }
   void setOverloadIndex(int32_t index) { _overloadIndex = index; }
+
+  Defn* asDefn() final { return this; }
 
 protected:
   void formatModifiers(std::ostream& out) const;
@@ -192,8 +207,7 @@ protected:
   bool _undef;                  // Undefined method
   bool _static;                 // Was declared static
 
-//   ArrayRef<Member*> _members;
-  ArrayRef<Expr*> _attributes;
+  std::vector<Expr*> _attributes;
 
   int32_t _overloadIndex;
 //  docComment: DocComment = 7;   # Doc comments
@@ -202,14 +216,65 @@ protected:
 //  fulfillments: list[Function] = 11;      # Fulfillment of required methods
 };
 
+/** A definition that may or may not have template parameters. */
+class PossiblyGenericDefn : public Defn {
+public:
+  PossiblyGenericDefn(
+      Kind kind, const source::Location& location, const StringRef& name, Member* definedIn)
+    : Defn(kind, location, name, definedIn)
+    , _typeParamScope(new scope::StandardScope(scope::SymbolScope::DEFAULT, this))
+    , _requiredMethodScope(new scope::StandardScope(scope::SymbolScope::DEFAULT, this))
+  {
+  }
+
+  ~PossiblyGenericDefn();
+
+  /** List of template parameters. */
+  std::vector<TypeParameter*>& typeParams() { return _typeParams; }
+  const std::vector<TypeParameter*>& typeParams() const { return _typeParams; }
+
+  /** Scope containing all of the type parameters of this type. */
+  scope::StandardScope* typeParamScope() const { return _typeParamScope.get(); }
+
+  /** List of required functions. */
+  std::vector<RequiredFunction*>& requiredFunctions() { return _requiredFunctions; }
+  const std::vector<RequiredFunction*>& requiredFunctions() const { return _requiredFunctions; }
+
+  /** Scope containing all of the type parameters of this type. */
+  scope::StandardScope* requiredMethodScope() const { return _requiredMethodScope.get(); }
+
+  /** Scopes searched when resolving a reference to a qualified name that is mentioned in a
+      'where' clause. So for example, if a template has a constraint such as
+      'where hashing.hash(T)', then these scopes intercept the symbol lookup of 'hashing.hash'
+      and replace it with the required function placeholder. */
+  std::unordered_map<Member*, scope::StandardScope*>& interceptScopes() { return _interceptScopes; }
+  const std::unordered_map<Member*, scope::StandardScope*>& interceptScopes() const {
+    return _interceptScopes;
+  }
+
+  /** Dynamic casting support. */
+  static bool classof(const PossiblyGenericDefn* m) { return true; }
+  static bool classof(const Member* m) {
+    return m->kind() == Kind::TYPE
+        || m->kind() == Kind::FUNCTION
+        || m->kind() == Kind::PROPERTY;
+  }
+
+private:
+  std::vector<TypeParameter*> _typeParams;
+  std::vector<RequiredFunction*> _requiredFunctions;
+  std::auto_ptr<scope::StandardScope> _typeParamScope;
+  std::auto_ptr<scope::StandardScope> _requiredMethodScope;
+  std::unordered_map<Member*, scope::StandardScope*> _interceptScopes;
+};
+
 /** A type definition. */
-class TypeDefn : public Defn {
+class TypeDefn : public PossiblyGenericDefn {
 public:
   TypeDefn(Kind kind, const source::Location& location, const StringRef& name, Member* definedIn)
-    : Defn(kind, location, name, definedIn)
+    : PossiblyGenericDefn(kind, location, name, definedIn)
     , _memberScope(new scope::StandardScope(scope::SymbolScope::INSTANCE, this))
     , _inheritedMemberScope(new scope::InheritedScope(_memberScope.get(), this))
-    , _typeParamScope(new scope::StandardScope(scope::SymbolScope::DEFAULT, this))
   {
   }
 
@@ -223,10 +288,6 @@ public:
   std::vector<Member*>& members() { return _members; }
   const std::vector<Member*>& members() const { return _members; }
 
-  /** List of function parameters. */
-  std::vector<TypeParameter*>& typeParams() { return _typeParams; }
-  const std::vector<TypeParameter*>& typeParams() const { return _typeParams; }
-
   /** Scope containing all of the members of this type. */
   scope::StandardScope* memberScope() const { return _memberScope.get(); }
 
@@ -234,18 +295,17 @@ public:
       only non-shadowed inherited members. */
   scope::InheritedScope* inheritedMemberScope() const { return _inheritedMemberScope.get(); }
 
-  /** Scope containing all of the type parameters of this type. */
-  scope::StandardScope* typeParamScope() const { return _typeParamScope.get(); }
-
   void format(std::ostream& out) const;
+
+  /** Dynamic casting support. */
+  static bool classof(const TypeDefn* m) { return true; }
+  static bool classof(const Member* m) { return m->kind() == Kind::TYPE; }
 
 private:
   Type* _type;
   std::vector<Member*> _members;
-  std::vector<TypeParameter*> _typeParams;
   std::auto_ptr<scope::StandardScope> _memberScope;
   std::auto_ptr<scope::InheritedScope> _inheritedMemberScope;
-  std::auto_ptr<scope::StandardScope> _typeParamScope;
 
 //   # List of friend declarations for thibs class
 //   friends: list[Member] = 3;
@@ -275,8 +335,8 @@ public:
 
   /** The type variable for this parameter. This is used whenever there is a need to
       refer to this parameter within a type expression. */
-  TypeVariable* typeVar() const { return _typeVar; }
-  void setTypeVar(TypeVariable* type) { _typeVar = type; }
+  TypeVar* typeVar() const { return _typeVar; }
+  void setTypeVar(TypeVar* type) { _typeVar = type; }
 
   /** If this type pararameter holds a type expression, this is the default value for
       the type parameter. nullptr if no default has been specified. */
@@ -287,6 +347,16 @@ public:
   bool isVariadic() const { return _variadic; }
   void setVariadic(bool variadic) { _variadic = variadic; }
 
+  /** Indicates this type parameter is tied to the 'self' type used to invoke the method or
+      property that defines that parameter. */
+  bool isSelfParam() const { return _selfParam; }
+  void setSelfParam(bool selfParam) { _selfParam = selfParam; }
+
+  /** Indicates this type parameter is tied to the class used to invoke the static method or
+      property that defines that parameter. */
+  bool isClassParam() const { return _classParam; }
+  void setClassParam(bool classParam) { _classParam = classParam; }
+
   /** List of subtype constraints on this type parameter. The type bound to this parameter
       must be a subtype of every type listed. */
   const TypeArray& subtypeConstraints() const { return _subtypeConstraints; }
@@ -294,11 +364,17 @@ public:
 
   void format(std::ostream& out) const;
 
+  /** Dynamic casting support. */
+  static bool classof(const TypeParameter* m) { return true; }
+  static bool classof(const Member* m) { return m->kind() == Kind::TYPE_PARAM; }
+
 private:
   Type* _valueType;
-  TypeVariable* _typeVar;
+  TypeVar* _typeVar;
   Type* _defaultType;
   bool _variadic;
+  bool _selfParam;
+  bool _classParam;
   TypeArray _subtypeConstraints;
 };
 
@@ -310,6 +386,7 @@ public:
     , _type(nullptr)
     , _init(nullptr)
     , _fieldIndex(0)
+    , _defined(true)
   {}
 
   /** Type of this value. */
@@ -324,16 +401,30 @@ public:
   int32_t fieldIndex() const { return _fieldIndex; }
   void setFieldIndex(int32_t index) { _fieldIndex = index; }
 
+  /** Whether this variable is actually defined yet. This is used to detect uses of local
+      variables which occur prior to the definition but are in the same block. */
+  bool isDefined() const { return _defined; }
+  void setDefined(bool defined) { _defined = defined; }
+
   void format(std::ostream& out) const;
+
+  /** Dynamic casting support. */
+  static bool classof(const ValueDefn* m) { return true; }
+  static bool classof(const Member* m) {
+    return m->kind() == Kind::VAR ||
+        m->kind() == Kind::LET ||
+        m->kind() == Kind::ENUM_VAL ||
+        m->kind() == Kind::PARAM ||
+        m->kind() == Kind::TUPLE_MEMBER;
+  }
 
 private:
   Type* _type;
   Expr* _init;
   int32_t _fieldIndex;
+  bool _defined;
 };
 
-// struct Var(ValueDefn) = MemberKind.VAR {}
-// struct Let(ValueDefn) = MemberKind.LET {}
 // struct EnumValue(ValueDefn) = MemberKind.ENUM_VAL {
 //   ordinal:i32 = 1;
 // }
@@ -378,6 +469,10 @@ public:
 
   void format(std::ostream& out) const;
 
+  /** Dynamic casting support. */
+  static bool classof(const Parameter* m) { return true; }
+  static bool classof(const Member* m) { return m->kind() == Kind::PARAM; }
+
 private:
   Type* _internalType;
   bool _keywordOnly;
@@ -391,18 +486,19 @@ private:
 };
 
 /** A method or global function. */
-class Function : public Defn {
+class Function : public PossiblyGenericDefn {
 public:
   Function(const source::Location& location, const StringRef& name, Member* definedIn = nullptr)
-    : Defn(Kind::FUNCTION, location, name, definedIn)
+    : PossiblyGenericDefn(Kind::FUNCTION, location, name, definedIn)
     , _type(nullptr)
     , _paramScope(new scope::StandardScope(scope::SymbolScope::DEFAULT, this))
-    , _typeParamScope(new scope::StandardScope(scope::SymbolScope::DEFAULT, this))
+    , _selfType(nullptr)
     , _body(nullptr)
     , _constructor(false)
     , _requirement(false)
     , _native(false)
     , _methodIndex(0)
+    , _tempVarCount(0)
   {}
 
   ~Function();
@@ -418,20 +514,17 @@ public:
   /** Scope containing all of the parameters of this function. */
   scope::StandardScope* paramScope() const { return _paramScope.get(); }
 
-  /** List of function type parameters. */
-  std::vector<TypeParameter*>& typeParams() { return _typeParams; }
-  const std::vector<TypeParameter*>& typeParams() const { return _typeParams; }
+  /** The function body. nullptr if no body has been declared. */
+  Type* selfType() const { return _selfType; }
+  void setSelfType(Type* t) { _selfType = t; }
 
-  /** Scope containing all of the type parameters of this function. */
-  scope::StandardScope* typeParamScope() const { return _typeParamScope.get(); }
+  /** The type of the 'self' parameter. */
+  Expr* body() const { return _body; }
+  void setBody(Expr* body) { _body = body; }
 
   /** List of all local variables and definitions. */
   std::vector<Defn*>& localDefns() { return _localDefns; }
   const std::vector<Defn*>& localDefns() const { return _localDefns; }
-
-  /** The function body. nullptr if no body has been declared. */
-  Expr* body() const { return _body; }
-  void setBody(Expr* body) { _body = body; }
 
   /** True if this function is a constructor. */
   bool isConstructor() const { return _constructor; }
@@ -449,34 +542,42 @@ public:
   int32_t methodIndex() const { return _methodIndex; }
   void setNative(int32_t index) { _methodIndex = index; }
 
+  /** Return the next available temporary variable index. */
+  int32_t nextTempVarIndex() { return _tempVarCount++; }
+
+  /** The number of temporary variables. */
+  int32_t tempVarCount() { return _tempVarCount; }
+
   void format(std::ostream& out) const;
+
+  /** Dynamic casting support. */
+  static bool classof(const Function* m) { return true; }
+  static bool classof(const Member* m) { return m->kind() == Kind::FUNCTION; }
 
 private:
   FunctionType* _type;
   std::vector<Parameter*> _params;
-  std::vector<TypeParameter*> _typeParams;
   std::auto_ptr<scope::StandardScope> _paramScope;
-  std::auto_ptr<scope::StandardScope> _typeParamScope;
   std::vector<Defn*> _localDefns;
+  Type* _selfType;
   Expr* _body;
   bool _constructor;
   bool _requirement;
   bool _native;
   int32_t _methodIndex;
-  //tempVarCount: i32 = 8;        # Number of temporary variables used in this function.
+  int32_t _tempVarCount;        // Count of temporary variables within this function.
   //linkageName: string = 10;     # If present, indicates the symbolic linkage name of this function
-  //selfType : type.Type = 11 [nullable]; # Type of the 'self' argument (not part of the function type).
   //evaluable : bool = 12;        # If true, function can be evaluated at compile time.
 };
 
 /** A property definition. */
-class Property : public Defn {
+class Property : public PossiblyGenericDefn {
 public:
   Property(const source::Location& location, const StringRef& name, Member* definedIn = nullptr)
-    : Defn(Kind::FUNCTION, location, name, definedIn)
+    : PossiblyGenericDefn(Kind::PROPERTY, location, name, definedIn)
     , _type(nullptr)
     , _paramScope(new scope::StandardScope(scope::SymbolScope::DEFAULT, this))
-    , _typeParamScope(new scope::StandardScope(scope::SymbolScope::DEFAULT, this))
+    , _selfType(nullptr)
     , _getter(nullptr)
     , _setter(nullptr)
   {}
@@ -494,12 +595,9 @@ public:
   /** Scope containing all of the parameters of this function. */
   scope::StandardScope* paramScope() const { return _paramScope.get(); }
 
-  /** List of function type parameters. */
-  std::vector<TypeParameter*>& typeParams() { return _typeParams; }
-  const std::vector<TypeParameter*>& typeParams() const { return _typeParams; }
-
-  /** Scope containing all of the type parameters of this function. */
-  scope::StandardScope* typeParamScope() const { return _typeParamScope.get(); }
+  /** The function body. nullptr if no body has been declared. */
+  Type* selfType() const { return _selfType; }
+  void setSelfType(Type* t) { _selfType = t; }
 
   /** The 'get' accessor function for this property. */
   Function* getter() const { return _getter; }
@@ -511,15 +609,17 @@ public:
 
   void format(std::ostream& out) const;
 
+  /** Dynamic casting support. */
+  static bool classof(const Property* m) { return true; }
+  static bool classof(const Member* m) { return m->kind() == Kind::PROPERTY; }
+
 private:
   Type* _type;
   std::vector<Parameter*> _params;
-  std::vector<TypeParameter*> _typeParams;
   std::auto_ptr<scope::StandardScope> _paramScope;
-  std::auto_ptr<scope::StandardScope> _typeParamScope;
+  Type* _selfType;
   Function* _getter;
   Function* _setter;
-//  selfType : type.Type = 7 [nullable]; # Type of the 'self' argument (not part of the function type).
 };
 
 class SpecializedMember : public Member {
@@ -538,6 +638,10 @@ public:
   Env& env() { return _env; }
   const Env& env() const { return _env; }
 
+  /** Dynamic casting support. */
+  static bool classof(const SpecializedMember* m) { return true; }
+  static bool classof(const Member* m) { return m->kind() == Kind::SPECIALIZED; }
+
 private:
   Member* _generic;
   Env _env;
@@ -550,7 +654,6 @@ private:
 //   # Environment of template variable bindings
 //   env: type.Env = 2;
 // }
-
 
 }}
 

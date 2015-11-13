@@ -9,6 +9,10 @@
   #include "spark/ast/node.h"
 #endif
 
+#ifndef SPARK_COLLECTIONS_STRINGREF_H
+  #include "spark/collections/stringref.h"
+#endif
+
 namespace spark {
 namespace type {
 class Type;
@@ -72,22 +76,6 @@ private:
   const Node* _test;
   NodeList _outcomes;
 };
-
-// class CallRequired(Oper):
-//   returnType = defscalar(Node)
-//   static = defscalar(bool)
-//
-// # Type operators
-// class Modified(Oper):
-//   const = defscalar(bool)
-//   transitiveConst = defscalar(bool)
-//   variadic = defscalar(bool)
-//   ref = defscalar(bool)
-//
-// class FunctionType(Node):
-//   selfType = defscalar(Node)
-//   returnType = defscalar(Node)
-//   paramTypes = deflist(Node)
 
 }}
 

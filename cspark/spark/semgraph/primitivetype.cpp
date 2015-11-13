@@ -1,5 +1,6 @@
 #include "spark/scope/stdscope.h"
 #include "spark/semgraph/defn.h"
+#include "spark/semgraph/expr.h"
 #include "spark/semgraph/primitivetype.h"
 
 namespace spark {
@@ -39,6 +40,35 @@ FloatType FloatType::F64("f64", 64);
 /** Null pointer. */
 NullPtrType NullPtrType::NULLPTR;
 
+void IntegerType::createConstant(support::Arena& arena, const StringRef& name, int32_t value) {
+  auto constVal = new (arena) IntegerLiteral(Location(), value, _unsigned);
+  constVal->setType(this);
+//  graphtools.encodeInt(constVal, value)
+
+  auto v = new ValueDefn(Defn::Kind::LET, Location(), name, defn());
+  v->setStatic(true);
+  v->setType(this);
+  v->setInit(constVal);
+  v->setVisibility(Visibility::PUBLIC);
+
+  defn()->members().push_back(v);
+  defn()->memberScope()->addMember(v);
+}
+
+void IntegerType::createConstants(support::Arena& arena) {
+  if (_unsigned) {
+    createConstant(arena, "minVal", 0);
+    createConstant(arena, "maxVal", ~(-1LL << _bits));
+  } else if (_positive) {
+    createConstant(arena, "minVal", 0);
+    createConstant(arena, "maxVal", (1LL << (_bits - 1)) - 1);
+  } else {
+    createConstant(arena, "minVal", -1 << (_bits - 1));
+    createConstant(arena, "maxVal", (1LL << (_bits - 1)) - 1);
+  }
+}
+
+
 // scope::SymbolScope* _scope = nullptr;
 //
 // scope::SymbolScope* PrimitiveType::scope() {
@@ -55,5 +85,20 @@ NullPtrType NullPtrType::NULLPTR;
 // //   {}
 //   return _scope;
 // }
+
+void createConstants(support::Arena& arena) {
+  IntegerType::I8.createConstants(arena);
+  IntegerType::I16.createConstants(arena);
+  IntegerType::I32.createConstants(arena);
+  IntegerType::I64.createConstants(arena);
+  IntegerType::U8.createConstants(arena);
+  IntegerType::U16.createConstants(arena);
+  IntegerType::U32.createConstants(arena);
+  IntegerType::U64.createConstants(arena);
+  IntegerType::P8.createConstants(arena);
+  IntegerType::P16.createConstants(arena);
+  IntegerType::P32.createConstants(arena);
+  IntegerType::P64.createConstants(arena);
+}
 
 }}

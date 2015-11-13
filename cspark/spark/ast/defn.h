@@ -228,7 +228,7 @@ class Function : public Defn {
 public:
   Function(const Location& location, const StringRef& name)
     : Defn(Kind::FUNCTION, location, name)
-    , _type(nullptr)
+    , _returnType(nullptr)
     , _body(nullptr)
     , _constructor(false)
     , _requirement(false)
@@ -237,8 +237,8 @@ public:
   {}
 
   /** Type of this defn. */
-  const Node* type() const { return _type; }
-  void setType(Node* type) { _type = type; }
+  const Node* returnType() const { return _returnType; }
+  void setReturnType(Node* type) { _returnType = type; }
 
   /** The list of parametgers for this property. */
   const NodeList& params() const { return _params; }
@@ -264,7 +264,7 @@ public:
   const Node* selfType() const { return _selfType; }
   void setSelfType(Node* selfType) { _selfType = selfType; }
 private:
-  const Node* _type;
+  const Node* _returnType;
   NodeList _params;
   const Node* _body;
   bool _constructor;

@@ -28,6 +28,7 @@ public:
     , _source(source)
     , _memberScope(new scope::StandardScope(scope::SymbolScope::DEFAULT))
     , _importScope(new scope::StandardScope(scope::SymbolScope::DEFAULT))
+    , _tempVarCount(0)
   {}
 
   /** Source file of this module. */
@@ -48,6 +49,12 @@ public:
   support::Path& path() { return _path; }
   const support::Path& path() const { return _path; }
 
+  /** Return the next available temporary variable index. */
+  int32_t nextTempVarIndex() { return _tempVarCount++; }
+
+  /** The number of temporary variables. */
+  int32_t tempVarCount() { return _tempVarCount; }
+
   support::Arena& astArena() { return _astArena; }
   support::Arena& sgArena() { return _sgArena; }
 
@@ -60,6 +67,7 @@ private:
   std::auto_ptr<scope::StandardScope> _memberScope;
   std::auto_ptr<scope::StandardScope> _importScope;
   support::Path _path;
+  int32_t _tempVarCount;        // Count of temporary variables within this module.
 
   support::Arena _astArena;
   support::Arena _sgArena;

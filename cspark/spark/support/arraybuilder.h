@@ -35,6 +35,10 @@ public:
     : _arena(arena)
     , _elements(init)
   {}
+  ArrayBuilder(support::Arena& arena, std::initializer_list<T> il)
+    : _arena(arena)
+    , _elements(il)
+  {}
 
   /** Append an element to the array. */
   ArrayBuilder& append(const T& elt) {

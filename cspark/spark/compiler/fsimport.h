@@ -31,6 +31,7 @@ namespace compiler {
 class Context;
 
 using collections::ArrayRef;
+using collections::SmallSetBase;
 using collections::StringRef;
 using support::Path;
 

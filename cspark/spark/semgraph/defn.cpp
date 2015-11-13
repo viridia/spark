@@ -31,12 +31,18 @@ void Defn::formatModifiers(std::ostream& out) const {
   }
 }
 
+PossiblyGenericDefn::~PossiblyGenericDefn() {
+  for (auto tparam : _typeParams) {
+    delete tparam;
+  }
+  for (auto iscope : _interceptScopes) {
+    delete iscope.second;
+  }
+}
+
 TypeDefn::~TypeDefn() {
   for (Member* member : _members) {
     delete member;
-  }
-  for (TypeParameter* tparam : _typeParams) {
-    delete tparam;
   }
 }
 
@@ -78,9 +84,6 @@ Function::~Function() {
   for (Parameter* param : _params) {
     delete param;
   }
-  for (TypeParameter* tparam : _typeParams) {
-    delete tparam;
-  }
 }
 
 void Function::format(std::ostream& out) const {
@@ -91,9 +94,6 @@ void Function::format(std::ostream& out) const {
 Property::~Property() {
   for (Parameter* param : _params) {
     delete param;
-  }
-  for (TypeParameter* tparam : _typeParams) {
-    delete tparam;
   }
   if (_getter != nullptr) {
     delete _getter;

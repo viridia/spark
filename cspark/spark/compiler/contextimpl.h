@@ -13,6 +13,10 @@
   #include "spark/support/arena.h"
 #endif
 
+#ifndef SPARK_SEMA_TYPES_TYPESTORE_H
+  #include "spark/sema/types/typestore.h"
+#endif
+
 #if SPARK_HAVE_MEMORY
   #include <memory>
 #endif
@@ -36,7 +40,8 @@ public:
   bool moduleSetsChanged() const final { return _moduleSetsChanged; }
   void setModuleSetsChanged(bool changed) final { _moduleSetsChanged = changed; }
   scope::ModulePathScope* modulePathScope() const final { return _modulePathScope.get(); }
-  TypeStore* typeStore() const final;
+  sema::types::TypeStore* typeStore() const final { return _typeStore.get(); }
+  sema::types::Essentials* essentials() const final { return _essentials.get(); }
 
 private:
   Reporter& _reporter;
@@ -45,6 +50,8 @@ private:
   ModuleList _sourceImportModules;
   bool _moduleSetsChanged;
   std::auto_ptr<scope::ModulePathScope> _modulePathScope;
+  std::auto_ptr<sema::types::TypeStore> _typeStore;
+  std::auto_ptr<sema::types::Essentials> _essentials;
   Compiler& _compiler;
 };
 

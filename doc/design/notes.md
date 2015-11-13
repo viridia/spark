@@ -60,3 +60,19 @@ I think we'll use the same algorithm that we did for python spark:
 * Base classes are resolved on-demand.
 * Inherited member scopes populate themselves on demand.
 * Check for cycles and raise an error.
+
+## Can we simplify the lookup of members?
+
+In python spark, we had throw-away scope wrappers for inherited scopes and instantiated scopes.
+
+What would be nice if we could cut out the middleman and simply transform a list of stem members
+into a list of leaf members, where some of those leaves would be specialized as needed.
+
+There are several variations:
+
+-- members -> members
+-- types -> members
+-- static vs. instance
+
+The issue with all this is that these wrapper scopes do have one important use, which is that they
+make name lookups faster, particularly in the case of templated base types.

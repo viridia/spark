@@ -14,6 +14,9 @@
 #endif
 
 namespace spark {
+namespace scope {
+class SymbolScope;
+}
 namespace semgraph {
 using scope::SymbolScope;
 

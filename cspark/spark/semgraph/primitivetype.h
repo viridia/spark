@@ -28,7 +28,9 @@ public:
   PrimitiveType(Kind kind, const StringRef& name)
     : Type(kind)
     , _defn(Defn::Kind::TYPE, source::Location(), name, nullptr)
-  {}
+  {
+    _defn.setType(this);
+  }
 
   /** Name of this primitive type. */
   StringRef name() const { return _defn.name(); }
@@ -36,6 +38,9 @@ public:
   /** Type definition for this primitive type. */
   TypeDefn* defn() { return &_defn; }
   const TypeDefn* defn() const { return &_defn; }
+
+  /** Members of this primitive type (like maxval). */
+  scope::SymbolScope* memberScope() { return _defn.memberScope(); }
 
   /** Lazily-constructed scope for all primitive types. */
   static scope::SymbolScope* scope();
@@ -52,11 +57,7 @@ private:
   static scope::SymbolScope* _scope;
 
 //   # Used internally by compiler to store methods for builtin types
-//   memberScope: defn.SymbolScope = 10;
 };
-
-// struct VoidType(PrimitiveType) = TypeKind.VOID {}
-// struct NullType(PrimitiveType) = TypeKind.NULL {}
 
 /** The 'void' type. */
 class VoidType : public PrimitiveType {
@@ -121,6 +122,9 @@ public:
   static IntegerType P32;
   static IntegerType P64;
 
+  void createConstant(support::Arena& arena, const StringRef& name, int32_t value);
+  void createConstants(support::Arena& arena);
+
 private:
   int32_t _bits;
   bool _unsigned;
@@ -157,6 +161,8 @@ public:
 
   static NullPtrType NULLPTR;
 };
+
+void createConstants(support::Arena& arena);
 
 }}
 

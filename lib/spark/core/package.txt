@@ -19,3 +19,4 @@ range.Range
 string.String
 stringbuilder.StringBuilder
 stringformatter.StringFormatter
+typeliteral.TypeLiteral

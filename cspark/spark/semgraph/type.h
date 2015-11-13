@@ -34,6 +34,7 @@ namespace semgraph {
 using collections::ArrayRef;
 using collections::StringRef;
 class TypeDefn;
+class TypeParameter;
 
 /** Base class for all types. */
 class Type {
@@ -41,6 +42,7 @@ public:
   enum class Kind {
     INVALID = 0,
     NO_RETURN,      // Sentinel type used to indicate expression never returns
+    IGNORED,        // Sentinel type used to indicate value is ignored.
 
     // Nominal types
     VOID,
@@ -54,7 +56,7 @@ public:
     UNION,          // Disjoint types
     TUPLE,          // Tuple of types
     FUNCTION,       // Function type
-    MODIFIED,       // Const or mutable type
+    CONST,          // Const type
     SPECIALIZED,    // Instantiation of a type
     VALUE_PARAM,    // A type parameter bound to an immutable value
 
@@ -63,16 +65,20 @@ public:
 //     AMBIGUOUS,  // Ambiguous type
 //     PHI,        // Represents multiple types produced by different code paths.
 
-    // Type names - used during parsing
-//     SPECIALIZE,
-//     TYPESET,
+    TYPESET,        // Represents a set of overloaded types with the same name.
 
     // Backend - used during code generation
 //     VALUE_REF,
 //     ADDRESS,
   };
 
+  void* operator new(size_t size, support::Arena& arena) {
+    return arena.allocate(size);
+  }
+
   Type(Kind kind) : _kind(kind) {}
+  Type() = delete;
+  Type(const Type& src) = delete;
 
   /** What kind of type this is. */
   Kind kind() const { return _kind; }
@@ -86,6 +92,7 @@ public:
   static bool classof(const Type* t) { return true; }
 
   static Type ERROR;
+  static Type IGNORED;
 private:
   const Kind _kind;
 };
@@ -158,27 +165,34 @@ private:
 //   value : expr.Expr = 1;
 // }
 
-// class ModifiedType : public Type {
-//   enum Modifiers {
-//     CONST = 1;
-//     TRANSITIVE_CONST = 2;
-//     VARIADIC = 3;
-//     REF = 4;
-//   }
-//
-//   base : Type = 1;              # Type being modifiers
-//   modifiers: set[Modifiers] = 2;# Set of modifiers applied to the type
-//
-// #  'const' : bool = 2;
-// #  transitiveConst : bool = 3;
-// #  variadic : bool = 4;
-// #  ref : bool = 5;
-// };
+/** Constant modifier on a type. */
+class ConstType : public Type {
+public:
+  ConstType(Type* base, bool provisional = false)
+    : Type(Kind::CONST)
+    , _base(base)
+    , _provisional(provisional)
+  {}
+
+  /** The type being modified. */
+  Type* base() const { return _base; }
+
+  /** Only const if outer scope is too. */
+  bool provisional() const { return _provisional; }
+
+private:
+  Type* _base;
+  bool _provisional;
+};
 
 /** Nominal user-defined types such as classes, structs, interfaces and enumerations. */
 class Composite : public Type {
 public:
-  Composite(Kind kind) : Type(kind), _defn(nullptr), _superType(nullptr) {}
+  Composite(Kind kind)
+    : Type(kind)
+    , _defn(nullptr)
+    , _superType(nullptr)
+  {}
 
   /** Definition for this type. */
   TypeDefn* defn() const { return _defn; }
@@ -192,6 +206,13 @@ public:
   const TypeArray& interfaces() const { return _interfaces; }
   void setInterfaces(const TypeArray& ifaces) { _interfaces = ifaces; }
 
+  /** Return true if 'super' is anywhere in this type's supertype tree. */
+  bool inheritsFrom(Type* super);
+
+  /** Flag that indicates whether we've translated the AST's supertypes into types. */
+  bool supertypesResolved() const { return _supertypesResolved; }
+  void setSupertypesResolved(bool v) { _supertypesResolved = v; }
+
   /** Dynamic casting support. */
   static bool classof(const Composite* t) { return true; }
   static bool classof(const Type* t) { return t->kind() >= Kind::CLASS && t->kind() <= Kind::ENUM; }
@@ -200,6 +221,7 @@ private:
   TypeDefn* _defn;
   Type* _superType;
   TypeArray _interfaces;
+  bool _supertypesResolved;
 
 //   # Table of instance methods for this type, including base types. The entries in the table are
 //   # pairs of integers containing (typeindex, methodindex). Typeindex is 0 for methods defined in
@@ -253,6 +275,22 @@ private:
   Env _env;
 };
 
+/** Type variables are used in type expressions to represent a template parameter. */
+class TypeVar : public Type {
+public:
+  TypeVar(TypeParameter* param) : Type(Kind::TYPE_VAR), _param(param) {}
+
+  /** The type parameter associated with this type variable. */
+  TypeParameter* param() const { return _param; }
+
+  /** Dynamic casting support. */
+  static bool classof(const TypeVar* t) { return true; }
+  static bool classof(const Type* t) { return t->kind() == Kind::TYPE_VAR; }
+
+private:
+  TypeParameter* _param;
+};
+
 /** A tuple of types that can be used as a lookup key. */
 class TypeKey {
 public:
@@ -287,6 +325,23 @@ public:
 
 private:
   TypeArray _members;
+};
+
+
+/** Type containing multiple overloaded types with the same name. */
+class TypeSet : public Type {
+public:
+  TypeSet(const TypeArray& members) : Type(Kind::TUPLE), _members(members) {}
+
+  /** Members of this set. */
+  const TypeArray& members() const { return _members; }
+
+  /** Dynamic casting support. */
+  static bool classof(const TypeSet* t) { return true; }
+  static bool classof(const Type* t) { return t->kind() == Kind::TYPESET; }
+
+private:
+  const TypeArray _members;
 };
 
 }}

@@ -29,6 +29,8 @@ public:
     switch (t->kind()) {
       case Type::Kind::INVALID:
         return visitInvalidType(t, std::forward<Args>(args)...);
+      case Type::Kind::IGNORED:
+        return visitIgnoredType(t, std::forward<Args>(args)...);
       case Type::Kind::NO_RETURN:
         return visitNoReturnType(t, std::forward<Args>(args)...);
       case Type::Kind::VOID:
@@ -51,14 +53,24 @@ public:
         return visitEnum(static_cast<Composite*>(t), std::forward<Args>(args)...);
       case Type::Kind::EXTENSION:
         return visitExtension(static_cast<Composite*>(t), std::forward<Args>(args)...);
-//     TYPE_VAR,       // Reference to a template parameter
-//     ALIAS,          // An alias for another type
-//
-//     // Derived types
-//     FUNCTION,       // Function type
-//     MODIFIED,       // Const or mutable type
-//     SPECIALIZED,    // Instantiation of a type
-//     VALUE_PARAM,    // A type parameter bound to an immutable value
+      case Type::Kind::UNION:
+        return visitUnionType(static_cast<UnionType*>(t), std::forward<Args>(args)...);
+      case Type::Kind::TUPLE:
+        return visitTupleType(static_cast<TupleType*>(t), std::forward<Args>(args)...);
+      case Type::Kind::FUNCTION:
+        return visitFunctionType(static_cast<FunctionType*>(t), std::forward<Args>(args)...);
+      case Type::Kind::TYPE_VAR:
+        assert(false && "Implement type variable.");
+      case Type::Kind::ALIAS:
+        assert(false && "Implement alias.");
+      case Type::Kind::CONST:
+        assert(false && "Implement const.");
+      case Type::Kind::SPECIALIZED:
+        assert(false && "Implement specialized.");
+      case Type::Kind::VALUE_PARAM:
+        assert(false && "Implement value param.");
+      case Type::Kind::TYPESET:
+        assert(false && "Implement typeset.");
     }
   }
 
@@ -70,24 +82,60 @@ public:
   }
 
   virtual ReturnType visitType(Type* t, Args&&... args) { return ReturnType(); }
-  virtual ReturnType visitPrimitiveType(PrimitiveType* t, Args&&... args) { return visitType(t); }
-  virtual ReturnType visitComposite(Composite* t, Args&&... args) { return visitType(t); }
-
-  virtual ReturnType visitInvalidType(Type* t, Args&&... args) { return visitType(t); }
-  virtual ReturnType visitNoReturnType(Type* t, Args&&... args) { return visitType(t); }
-  virtual ReturnType visitVoidType(VoidType* t, Args&&... args) { return visitPrimitiveType(t); }
-  virtual ReturnType visitBooleanType(BooleanType* t, Args&&... args) { return visitPrimitiveType(t); }
-  virtual ReturnType visitIntegerType(IntegerType* t, Args&&... args) { return visitPrimitiveType(t); }
-  virtual ReturnType visitFloatType(FloatType* t, Args&&... args) { return visitPrimitiveType(t); }
-  virtual ReturnType visitNullPtrType(NullPtrType* t, Args&&... args) { return visitPrimitiveType(t); }
-  virtual ReturnType visitClass(Composite* t, Args&&... args) { return visitComposite(t); }
-  virtual ReturnType visitStruct(Composite* t, Args&&... args) { return visitComposite(t); }
-  virtual ReturnType visitInterface(Composite* t, Args&&... args) { return visitComposite(t); }
-  virtual ReturnType visitEnum(Composite* t, Args&&... args) { return visitComposite(t); }
-  virtual ReturnType visitExtension(Composite* t, Args&&... args) { return visitComposite(t); }
-
-  virtual ReturnType visitUnionType(UnionType* t, Args&&... args) { return visitType(t); }
-  virtual ReturnType visitTupleType(TupleType* t, Args&&... args) { return visitType(t); }
+  virtual ReturnType visitInvalidType(Type* t, Args&&... args) {
+    return visitType(t, std::forward<Args>(args)...);
+  }
+  virtual ReturnType visitIgnoredType(Type* t, Args&&... args) {
+    return visitType(t, std::forward<Args>(args)...);
+  }
+  virtual ReturnType visitPrimitiveType(PrimitiveType* t, Args&&... args) {
+    return visitType(t, std::forward<Args>(args)...);
+  }
+  virtual ReturnType visitComposite(Composite* t, Args&&... args) {
+    return visitType(t, std::forward<Args>(args)...);
+  }
+  virtual ReturnType visitNoReturnType(Type* t, Args&&... args) {
+    return visitType(t, std::forward<Args>(args)...);
+  }
+  virtual ReturnType visitVoidType(VoidType* t, Args&&... args) {
+    return visitPrimitiveType(t, std::forward<Args>(args)...);
+  }
+  virtual ReturnType visitBooleanType(BooleanType* t, Args&&... args) {
+    return visitPrimitiveType(t, std::forward<Args>(args)...);
+  }
+  virtual ReturnType visitIntegerType(IntegerType* t, Args&&... args) {
+    return visitPrimitiveType(t, std::forward<Args>(args)...);
+  }
+  virtual ReturnType visitFloatType(FloatType* t, Args&&... args) {
+    return visitPrimitiveType(t, std::forward<Args>(args)...);
+  }
+  virtual ReturnType visitNullPtrType(NullPtrType* t, Args&&... args) {
+    return visitPrimitiveType(t, std::forward<Args>(args)...);
+  }
+  virtual ReturnType visitClass(Composite* t, Args&&... args) {
+    return visitComposite(t, std::forward<Args>(args)...);
+  }
+  virtual ReturnType visitStruct(Composite* t, Args&&... args) {
+    return visitComposite(t, std::forward<Args>(args)...);
+  }
+  virtual ReturnType visitInterface(Composite* t, Args&&... args) {
+    return visitComposite(t, std::forward<Args>(args)...);
+  }
+  virtual ReturnType visitEnum(Composite* t, Args&&... args) {
+    return visitComposite(t, std::forward<Args>(args)...);
+  }
+  virtual ReturnType visitExtension(Composite* t, Args&&... args) {
+    return visitComposite(t, std::forward<Args>(args)...);
+  }
+  virtual ReturnType visitUnionType(UnionType* t, Args&&... args) {
+    return visitType(t, std::forward<Args>(args)...);
+  }
+  virtual ReturnType visitTupleType(TupleType* t, Args&&... args) {
+    return visitType(t, std::forward<Args>(args)...);
+  }
+  virtual ReturnType visitFunctionType(FunctionType* t, Args&&... args) {
+    return visitType(t, std::forward<Args>(args)...);
+  }
 };
 
 }}

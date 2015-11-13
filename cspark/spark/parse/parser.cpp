@@ -382,6 +382,8 @@ Defn* Parser::enumTypeDef() {
         defnMode = true;
       }
     }
+
+    d->setMembers(members.build());
   }
 
   return d;
@@ -454,17 +456,16 @@ Defn* Parser::methodDef() {
     name = "()";
   }
 
-  bool hasReturnType = false;
+  Node* returnType = nullptr;
   if (match(TOKEN_RETURNS)) {
-    Node* returnType = typeExpression();
+    returnType = typeExpression();
     if (returnType == nullptr) {
       skipOverDefn();
       return nullptr;
     }
-    hasReturnType = true;
   }
 
-  if (hasReturnType ||
+  if (returnType != nullptr ||
       _token == TOKEN_WHERE ||
       _token == TOKEN_LBRACE ||
       _token == TOKEN_FAT_ARROW ||
@@ -475,6 +476,7 @@ Defn* Parser::methodDef() {
     fn->setParams(params.build());
     fn->setOverride(isOverride);
     fn->setUndef(isUndef);
+    fn->setReturnType(returnType);
 
     // Type constraints
     ast::NodeListBuilder requires(_arena);
@@ -498,6 +500,7 @@ Defn* Parser::methodDef() {
     }
 
     ast::Property* prop = new (_arena) ast::Property(loc, name);
+    prop->setType(propType);
     prop->setTypeParams(templateParams.build());
     prop->setParams(params.build());
     prop->setOverride(isOverride);
@@ -1066,16 +1069,17 @@ Node* Parser::typeTerm(bool allowPartial) {
 Node* Parser::typePrimary(bool allowPartial) {
   switch (_token) {
     case TOKEN_CONST: {
+      Location loc = location();
       next();
       Kind kind = Kind::CONST;
       if (match(TOKEN_QMARK)) {
-        kind = Kind::INHERITED_CONST;
+        kind = Kind::PROVISIONAL_CONST;
       }
       Node* t = typePrimary(allowPartial);
       if (t == nullptr) {
         return nullptr;
       }
-      return new (_arena) ast::UnaryOp(kind, t->location(), t);
+      return new (_arena) ast::UnaryOp(kind, loc | t->location(), t);
     }
     case TOKEN_FN: {
       next();
@@ -1401,7 +1405,7 @@ Node* Parser::loopStmt() {
     return nullptr;
   }
   builder.append(body);
-  return new (_arena) ast::ControlStmt(Kind::WHILE, loc, nullptr, builder.build());
+  return new (_arena) ast::ControlStmt(Kind::LOOP, loc, nullptr, builder.build());
 }
 
 Node* Parser::forStmt() {
@@ -2071,11 +2075,12 @@ Node* Parser::primary() {
     case TOKEN_DOT: {
       next();
       if (_token == TOKEN_ID) {
-        Node* expr = primary();
+        Node* expr = id();
         if (expr == nullptr) {
           return nullptr;
         }
-        return new (_arena) ast::UnaryOp(Kind::SELF_NAME_REF, expr->location(), expr);
+        auto e = new (_arena) ast::UnaryOp(Kind::SELF_NAME_REF, expr->location(), expr);
+        return primarySuffix(e);
       } else {
         expected("identifier");
         return nullptr;
@@ -2126,7 +2131,7 @@ Node* Parser::primarySuffix(Node* expr) {
   while (_token != TOKEN_END) {
     if (match(TOKEN_DOT)) {
       if (_token == TOKEN_ID) {
-        expr = new (_arena) ast::MemberRef(location(), copyOf(tokenValue()), expr);
+        expr = new (_arena) ast::MemberRef(openLoc | location(), copyOf(tokenValue()), expr);
         next();
       } else {
         expected("identifier");

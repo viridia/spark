@@ -28,7 +28,7 @@ public:
   {}
 
   /** The text of this identifier. */
-  const StringRef name() const { return _name; }
+  const StringRef& name() const { return _name; }
 
 private:
   const StringRef _name;
@@ -46,7 +46,7 @@ public:
   {}
 
   /** The text of this identifier. */
-  const StringRef name() const { return _name; }
+  const StringRef& name() const { return _name; }
 
   /** The container of the member. */
   const Node* base() const { return _base; }

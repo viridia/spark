@@ -27,11 +27,15 @@ class Module;
 namespace support {
 class Arena;
 }
+namespace sema {
+namespace types {
+class TypeStore;
+class Essentials;
+}
+}
 namespace compiler {
 using spark::error::Reporter;
 using spark::support::Arena;
-
-class TypeStore;
 
 typedef std::vector<semgraph::Module*> ModuleList;
 // typedef std::unordered_set<semgraph::Module*> ModuleSet;
@@ -64,7 +68,10 @@ public:
   virtual scope::ModulePathScope* modulePathScope() const = 0;
 
   /** Registry for derived types. */
-  virtual TypeStore* typeStore() const = 0;
+  virtual sema::types::TypeStore* typeStore() const = 0;
+
+  /** Registry for essential types. */
+  virtual sema::types::Essentials* essentials() const = 0;
 };
 
 }}

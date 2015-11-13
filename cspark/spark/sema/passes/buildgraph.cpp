@@ -92,6 +92,14 @@ semgraph::Defn* BuildGraphPass::createDefn(const ast::Node * node, semgraph::Mem
           semgraph::Member::Kind::LET : semgraph::Member::Kind::VAR;
       semgraph::ValueDefn* vd = new semgraph::ValueDefn(
           kind, ast->location(), ast->name(), parent);
+      vd->setAst(ast);
+      return vd;
+    }
+    case ast::Kind::ENUM_VALUE: {
+      const ast::ValueDefn* ast = static_cast<const ast::ValueDefn*>(node);
+      semgraph::ValueDefn* vd = new semgraph::ValueDefn(
+          semgraph::Member::Kind::ENUM_VAL, ast->location(), ast->name(), parent);
+      vd->setAst(ast);
       return vd;
     }
     case ast::Kind::CLASS_DEFN:
@@ -101,7 +109,7 @@ semgraph::Defn* BuildGraphPass::createDefn(const ast::Node * node, semgraph::Mem
       const ast::TypeDefn* ast = static_cast<const ast::TypeDefn*>(node);
       std::string typeName(ast->name().begin(), ast->name().end());
       if (node->kind() == ast::Kind::OBJECT_DEFN) {
-        typeName.append("#Claass");
+        typeName.append("#Class");
       }
       semgraph::TypeDefn* td = new semgraph::TypeDefn(
           semgraph::Member::Kind::TYPE, ast->location(), typeName, parent);
@@ -144,6 +152,7 @@ semgraph::Defn* BuildGraphPass::createDefn(const ast::Node * node, semgraph::Mem
       const ast::Property* ast = static_cast<const ast::Property*>(node);
       semgraph::Property* prop = new semgraph::Property(ast->location(), ast->name(), parent);
       createParamList(ast->params(), prop, prop->params(), prop->paramScope());
+      createTypeParamList(ast->typeParams(), prop, prop->typeParams(), prop->typeParamScope());
       if (ast->getter() != nullptr) {
         semgraph::Function* getter = new semgraph::Function(
             ast->getter()->location(), ast->getter()->name(), prop);
@@ -197,10 +206,11 @@ void BuildGraphPass::createTypeParamList(
   for (const ast::Node* node : paramAsts) {
     assert(node->kind() == ast::Kind::TYPE_PARAMETER);
     const ast::TypeParameter* ast = static_cast<const ast::TypeParameter*>(node);
-    semgraph::TypeParameter* param = new semgraph::TypeParameter(ast->location(), ast->name(), parent);
+    semgraph::TypeParameter* param = new semgraph::TypeParameter(
+        ast->location(), ast->name(), parent);
     param->setAst(ast);
     param->setVariadic(ast->isVariadic());
-
+    param->setTypeVar(new (arena()) semgraph::TypeVar(param));
     paramList.push_back(param);
     paramScope->addMember(param);
   }
